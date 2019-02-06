@@ -1,7 +1,6 @@
 package ru.neoflex.dev.spring.env_on_startup;
 
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -14,9 +13,9 @@ import java.util.stream.Collectors;
 
 
 @SpringBootApplication
-public class SpringBootRunner {
+public class SpringBootEnvOnStartupRunner {
     public static void main(String[] args) {
-        new SpringApplicationBuilder(SpringBootRunner.class)
+        new SpringApplicationBuilder(SpringBootEnvOnStartupRunner.class)
                 .web(WebApplicationType.NONE)
                 //.listeners() // Здесь должен быть ваш листенер!
                 .run(args);
@@ -27,7 +26,9 @@ public class SpringBootRunner {
 
         public static void writeProps(Map<String, String> pros) {
             try {
-                var filePath = Files.createFile(Path.of("./tmp-file.txt"));
+                var pathOfFile = Path.of("./tmp-file.txt");
+                Files.deleteIfExists(pathOfFile);
+                var filePath = Files.createFile(pathOfFile);
 
                 var linesOfProps = pros.entrySet().stream()
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
