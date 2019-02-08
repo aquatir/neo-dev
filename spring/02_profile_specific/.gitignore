@@ -12,6 +12,7 @@
 
 # IDEs and editors
 /.idea
+*.iml
 .class
 .project
 .classpath
@@ -19,7 +20,6 @@
 *.launch
 .settings/
 *.sublime-workspace
-*.iml
 
 # IDE - VSCode
 .vscode/*
