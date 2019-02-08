@@ -100,4 +100,11 @@ public class MyProfileAwareService implements EnvironmentAware
 
 ### Задание
 
+Есть Spring Boot приложение с 1 интерфейсом-сервисом и 2 его реалиацями. Неоходимо, чтобы
+1. ```ProductionMyService``` при вызове метода ```generateString``` всегда возвращал строку "NOT in mock"
+2. ```MockMyService``` при вызове с профилем ```mock``` всегда возвращал строку "In mock"
+3. ```MockMyService``` при вызове с профилем ```mock``` и с профилем ```test``` возвращал строку "In mock In test"
 
+При этом:
+1. Тест ```MockMyServiceTest``` должен запускаться только с профилем ```mock```
+2. Тест ```MockMyServiceInTestModeTest``` должен запускатся с 2 профилями - ```mock``` и ```test``` 
