@@ -6,4 +6,7 @@
 
 ### Почитать
 
+
+1. Тысячи статей по security https://www.baeldung.com/security-spring
+
 ### Задание
