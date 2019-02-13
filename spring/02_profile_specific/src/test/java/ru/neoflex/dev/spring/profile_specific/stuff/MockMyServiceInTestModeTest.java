@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup.stuff;
+package ru.neoflex.dev.spring.profile_specific.stuff;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -9,12 +9,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 @SpringBootTest
 @RunWith(SpringRunner.class)
-public class ProductionMyServiceTest {
+public class MockMyServiceInTestModeTest {
 
-    @Autowired private MyService myService;
+    @Autowired
+    private MyService myService;
 
     @Test
     public void testMyService() {
-        Assert.assertEquals("NOT in mock", myService.generateString());
+        Assert.assertEquals("In mock In test", myService.generateString());
     }
 }
