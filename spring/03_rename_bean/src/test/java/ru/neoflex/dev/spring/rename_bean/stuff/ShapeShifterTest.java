@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup.stuff;
+package ru.neoflex.dev.spring.rename_bean.stuff;
 
 
 import org.junit.Assert;

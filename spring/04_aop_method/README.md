@@ -58,16 +58,16 @@ public class Logger {
 @Aspect
 public class Logger {
     
-    @PointCut("execution(* ru.neoflex.dev.spring.save(..))") // Здесь определеяется PointCut - предикат
+    @Pointcut("execution(* ru.neoflex.dev.spring.save(..))") // Здесь определеяется Pointcut - предикат
     private void saveMethodCalled() {}  
     
-    @Before("saveMethodCalled()") // Можно использовать определенный ранее PointCut
-    public void logChangesBefore(ProceedingJoinPoint joinPoint) {
+    @Before("saveMethodCalled()") // Можно использовать определенный ранее Pointcut
+    public void logChangesBefore(JoinPoint joinPoint) {
         <... Your code executed BEFORE save ...>
     }
     
-    @After("execution(* ru.neoflex.dev.spring.save(..))") // А можно определить PointCut прямо внутри одного из advice'ов
-    public void logChangesAfter(ProceedingJoinPoint joinPoint) {
+    @After("execution(* ru.neoflex.dev.spring.save(..))") // А можно определить Pointcut прямо внутри одного из advice'ов
+    public void logChangesAfter(JoinPoint joinPoint) {
         <... Your code executed AFTER save ...>
     }
 }
@@ -140,6 +140,14 @@ Note 4: Работу ```@Transactional``` можно завязать на aspec
 
 ### Задание
 
+Есть сервис ```MyService```. В нем есть единственный метод ```printStuff```. Есть сервис ```CallsIncrementer```, который 
+имеет 2 счетчика - один для подсчета вызовом ДО, второй для подсчета вызовом ПОСЛЕ. Есть тест, который запускает метод 
+```printStuff```, а затем проверяет, положились ли в CallIncrementer две единички - 1 для запуска "ДО", вторая для 
+запуска "ПОСЛЕ".
 
+Необходимо написать аспект, который бы перехватывал вызов ```printStuff``` ДО исполнения и ПОСЛЕ исполнения. Каждый
+перехват должен увеличивать на единичку соответствующий счетчик в ```CallsIncrementer```.
 
-
+Для более веселой задачи (и более часто встречающейся в реальном мире) - рекомендуется перехват делать через аннотацию. 
+Такую аннотацию можно будет добавить над методом ```printStuff``` и перехватить в вашем перехватчике. Другое изменение
+класса ```MyService``` и ```MyAspectTest``` не допускается.

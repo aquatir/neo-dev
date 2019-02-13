@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.rename_bean;
 
 
 import org.springframework.boot.SpringApplication;
@@ -9,7 +9,4 @@ public class SpringBootRunner {
     public static void main(String[] args) {
         SpringApplication.run(SpringBootRunner.class, args);
     }
-
-
-
 }
