@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.api_version_resolver;
 
 
 import org.springframework.boot.SpringApplication;
