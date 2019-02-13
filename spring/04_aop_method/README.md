@@ -14,7 +14,10 @@
 Всякий раз перед началом взаимодействиуя с БД необходимо создавать транзакцию, а после взаимодействие - закрывать её 
 (commit/rollback). При этом, такие действия необходимо делать вне зависимости от конкретного действия, выполняемого над 
 базой данных. Значит открытие/закрытие транзакций можно вынести в отдельный блок и реализовать один раз. 
-Подобные задачи называются ```cross-cutting concern```.
+Подобные задачи называются ```cross-cutting concern```. Классическими примерами таких задач являются:
+- Работа с транзакциями
+- Логирование
+- Сбор метрок
 
 Первой (но на сегодняшний день - не единственной) реализацией концепции AOP под Java стал 
 [AspectJ[1]](https://www.eclipse.org/aspectj/doc/released/progguide/starting-aspectj.html). 
@@ -28,9 +31,9 @@
 же не стоит).
 
 
-##### На чем основан AOP
+##### Терминология AOP и API
 
-Подробно об AOP в Spring можно почитать [здесь[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop)
+Подробно об AOP в Spring можно почитать [здесь[3]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop)
 
 Работа с AOP основана на нескольких важных терминах:
 - *Aspect* - суть cross-cutting concert. Некоторая функциональность, работу которой нужно модуляризировать.
@@ -39,30 +42,104 @@
 - *Pointcut* - Предикат, соответствующий JP. Advice матчится по этому предикату, чтобы определить JP, для которого он будет выполнять действия
 - *Weaving* -  Процесс "скрещивания" существующего кода с AOP функциональность. В случае со Spring AOP происходит в рантайме.
 
+В Spring работа с AOP выглядит следующим образом:
+
+Сначала определяем класс, помеченный аннотацией ```@Aspect```. В этом классе будет определен набор действия для работы
+с конкретным cross-cutting concert
+```
+@Aspect
+public class Logger {
+    
+}
+``` 
+
+Далее следует определить Pointcut'ы и задать Advice'ы. Эти 2 действия можно объеденить, как в примере:
+```
+@Aspect
+public class Logger {
+    
+    @PointCut("execution(* ru.neoflex.dev.spring.save(..))") // Здесь определеяется PointCut - предикат
+    private void saveMethodCalled() {}  
+    
+    @Before("saveMethodCalled()") // Можно использовать определенный ранее PointCut
+    public void logChangesBefore(ProceedingJoinPoint joinPoint) {
+        <... Your code executed BEFORE save ...>
+    }
+    
+    @After("execution(* ru.neoflex.dev.spring.save(..))") // А можно определить PointCut прямо внутри одного из advice'ов
+    public void logChangesAfter(ProceedingJoinPoint joinPoint) {
+        <... Your code executed AFTER save ...>
+    }
+}
+```
+
+Затем следует реализовать метод перехватчика.
+
+Следует помнить, что Spring AOP не поддерживает все виды перехватов, которые поддерживает AspectJ (Напирмер, cflow использовать
+в спринге нельзя). Более подробно можно почитать [здесь[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop-pointcuts-designators)
 
 
-##### API и его использование
+Отдельно стоит сказать про ```Around``` перехватчик. При работе с around перехватчиком где-то внутри кода аспекта должен
+возвращаться результат работы метода при чем тип возвращаемого значения должен соответствовать тому типу, который бы вернулся из
+метода, если бы перехватчика не было. В качестве примера, перехватчик который перехватывает вызовы методов помеченных
+аннотацией ```ChangesAudited``` и запускающий ```Runnable```, логирующий перехваченный объект:
 
+```
+@Around("@annotation(ChangesAudited)")
+public Object logChangedObjects(ProceedingJoinPoint joinPoint) throws Throwable {
 
+    /* Get current user BEFORE execution of method because SecurityContext does not get propagated to thread pool executor */
+    var currentEmp = Optional.ofNullable(employeeAggregateService.getCurrentLoggedInEmployee());
+        
+    var currentUserUsername = currentEmp.map(Employee::getUsername)
+        .orElse("");
 
+    var result = joinPoint.proceed();
+
+    executor.submit(new AuditionRunnable(result, currentUserUsername));
+    return result;
+}
+```
 
 #### Где AOP используется в Spring из коробки
 
+В случае со Spring возможности AOP применяются при работе с транзакциями и аннотацией ```@Transactional```. 
+Аспект, отвечающий за обработку транзакций спринга называется ```AnnotationTransactionAspect```.
+Аспект, отвечающий за обработку JTA транзакций называется ```JtaAnnotationTransactionAspect```. Помним, что аннотаций 
+```@Transactional``` вообще говоря в Spring 2 штуки - она из самого спринга, вторая из JTA.
 
 
-#### Разлиция Spring AOP и AspectJ
 
+Note 1: ```@Transactional``` и любые другие аспекты Spring поумолчанию НЕ РАБОТАЮ, если они ставятся над private / package-private или protected 
+методами. Также аннотация игнорируется, если из одного бина вызвать метод того же самого бина, помеченного аннотацией.
+
+Note 2: Поумолчанию аннотации над интерфейсами не наследуется, поэтому рекомендуется ставить ```@Transactional``` над 
+конкретными имплементациями (Хотя аннотации над интефрейсами и будут работать с JDK Dynamic Proxy, они не будут работать с CGLIB)
+
+Note 3: Ставить ```@Transactional``` над методом, над которым стоит ```@PostConstruct```, тоже довольно плохая идея. Причина
+заключается в том, что создание проксей и ```PostConstruct``` происходит одновременно. Не делайте так :)
+
+Note 4: Работу ```@Transactional``` можно завязать на aspectJ напрямую, изменив параметр ```mode```. Это стоит делать только,
+если вы реально понимаете, что делаете. Переход на aspectJ позволяет решит проблем из Note 1.
+
+Более подробно о ```@Transactional``` мы еще поговорим в одном из следующих заданий. Пока же можно почитать
+ официальную доку [здесь[5]](https://docs.spring.io/spring/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations)
 
 ---
 
-
+Бонус: Про различия AsceptJ и Spring AOP можно почитать [здесь[6]](https://www.baeldung.com/spring-aop-vs-aspectj)
 
 ### Почитать
 
 1. AspectJ документация https://www.eclipse.org/aspectj/doc/released/progguide/starting-aspectj.html
 2. Как подружить Spring и AspectJ так, что Spring перестанет работать :) https://habr.com/ru/post/347752/
-3. Разница между Spring AOP и AspectJ https://www.baeldung.com/spring-aop-vs-aspectj
-4. AOP в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop
-    
+3. AOP в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop
+4. Виды понткатов https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop-pointcuts-designators
+5. Как работает ```@Transactional``` в спринге https://docs.spring.io/spring/docs/current/spring-framework-reference/data-access.html#transaction-declarative-annotations
+6. Разница между Spring AOP и AspectJ  https://www.baeldung.com/spring-aop-vs-aspectj
+
 ### Задание
+
+
+
 
