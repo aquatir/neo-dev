@@ -19,7 +19,6 @@
 Первой (но на сегодняшний день - не единственной) реализацией концепции AOP под Java стал 
 [AspectJ[1]](https://www.eclipse.org/aspectj/doc/released/progguide/starting-aspectj.html). 
 
-
 Важно понимать, что Spring AOP не ставит своей целью реализовать полностью все концепции аспектно-ориентированного программирование. 
 Его задача - дать возможность использовать AOP при работе с бинами, управляемыми через контекст. ```AspectJ``` же является 
 решением для *любой* проблемы, связанной с ```cross-cutting concerns```.
@@ -28,7 +27,22 @@
 Вот [тут[2]](https://habr.com/ru/post/347752/) например описано, как этого можно добиться (Повторять такое на проде конечно 
 же не стоит).
 
+
+##### На чем основан AOP
+
+Подробно об AOP в Spring можно почитать [здесь[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop)
+
+Работа с AOP основана на нескольких важных терминах:
+- *Aspect* - суть cross-cutting concert. Некоторая функциональность, работу которой нужно модуляризировать.
+- *Join point* - Конкретное место, в котором происходит действие аспекта. В Spring AOP JP - это всегда вызов метода.
+- *Advice* - Действия, которые необходимо выполнить в JP. Advice может быть выполнен ДО, ПОСЛЕ или ВОКРУГ вызова JP
+- *Pointcut* - Предикат, соответствующий JP. Advice матчится по этому предикату, чтобы определить JP, для которого он будет выполнять действия
+- *Weaving* -  Процесс "скрещивания" существующего кода с AOP функциональность. В случае со Spring AOP происходит в рантайме.
+
+
+
 ##### API и его использование
+
 
 
 
@@ -48,6 +62,7 @@
 1. AspectJ документация https://www.eclipse.org/aspectj/doc/released/progguide/starting-aspectj.html
 2. Как подружить Spring и AspectJ так, что Spring перестанет работать :) https://habr.com/ru/post/347752/
 3. Разница между Spring AOP и AspectJ https://www.baeldung.com/spring-aop-vs-aspectj
+4. AOP в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#aop
     
 ### Задание
 
