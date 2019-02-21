@@ -2,26 +2,91 @@
 
 ### Цель
 
-Понять, как Spring Web понимает, какие запросы пользователя должны обрабатываться какими методами. Научиться обрабатывать
-разные запросы пользователя на 1 евндоп
+Понять, как Spring Web распределяет запросы между методами, которые их обрабатываются. Научиться версионировать API
 
 ### Теория
 
+#### Определение нужного метода обработки запроса в Spring WEB
+Алгоритм для определения метода, который будет вызван для обработки запросы выглядит приблизительно следующим образом:
+1. Запрос, как в старом добром Servlet API, приходит на ```DispatcherServlet``` (он конфигурируется в Spring Boot автоматически).
+2. ```DispatcherServlet``` может обогатить запрос (Который представлен как ```HttpServletRequest```), например добавив в него 
+```LocaleResolver```.
+3. ```DispatcherServlet``` перенаправляет запрос на один из ```HandlerMapping```. Имплементации этого интерфейса знают о методах,
+ которым могут обрабатывать запросы. В Spring основными таким ```HandlerMapping``` является ```RequestMappingHandlerMapping```, 
+ который создает маппинги для всех методов, помеченных с ```@RequestMapping```  во всех ```@Controller``` классах 
+ и ```BeanNameUrlHandlerMapping```. Большую часть работы как правило делает первый.
+4. Вызывается метод обработки запроса - ```HandlerAdapter.handle()```. В случае с ```RequestMappingHandlerMapping``` 
+очевидно будет вызван ```RequestMappingHandlerAdapter.handle()```. 
+5. Происходит вызов метода, он отрабатывает, срабатывают какие-то перехватчики, если они есть, затем запрос оборачивается 
+в выходные данные при помощи ```HandlerMethodReturnValueHandler``` (или не оборачивается, если ответом является просто ```ModelAndView```) 
+и возвращается клиенту.
 
+Есть еще 1 интересным момент. Какой из методом будет выбран для обработки в ```HandlerAdapter.handle()```? В случае с 
+```RequestMappingHandlerMapping``` это определяется следующим образом:
 
+1. Для всех контроллеров создаются объекты ```RequestMappingInfo```. По нему можно определить,
+какой метод будет вызываться. ```RequestMappingInfo``` содержит набор ```RequestCondition```, среди которых:
+    - Condition по паттерну урла
+    - Condition по методу запроса
+    - Condition по параметрам запроса
+    - Condition по хедерам запроса
+    - Condition по Content-type и Accept хедерам запроса
+    - Condition полюбому другому кастомному параметру (Например - по параметрам тела запроса. Это можно переопределить)
+
+Приходящий запрос прогоняется по этим ```RequestCondition```. Если обнаруживается единственный Condition, которому удовлетворяет запрос -
+вызывается связанный с ним метод. Если их находится более одного - мы получаем ошибку .
+
+Из этого можно сделать вывод: Определив свой ```RequestCondition```, можно контроллировать вызываемые методы!
+
+Делается это следующим образом:
+1. Создаем свою имплементацию ```RequestCondition```, переопределяя необходимые методы
+2. Создаем подкласс ```public class MyMappingHandlerMapping extends RequestMappingHandlerMapping```, чтобы переопределить
+нужный нам метод - а именно ```protected RequestCondition<?> getCustomMethodCondition(Method method)```. Этот метод 
+задает кастомные ```RequestCondition``` и поумолчанию их нет. Нам надо добавить в него наш ```Condition```.
+3. Заставляем Spring Использовать наш теперь переопределенный ```MyMappingHandlerMapping``` при помощи переопределения
+```WebMvcConfigurationSupport```:
+```java
+@Configuration
+public class WebMvcConfig extends WebMvcConfigurationSupport {
+    @Override
+    public RequestMappingHandlerMapping requestMappingHandlerMapping() {
+        return new VersionRequestMappingHandlerMapping();
+    }
+}
+```
+Теперь мы можем радоваться нашему новому переопределенному методу. Готовый пример того, как можно работать с этой магией приведен 
+[здесь[1]](https://github.com/aquatir/code-samples/tree/master/code-sample-java/code-sample-spring-api-versioning)
+
+[здесь[2]](https://dzone.com/articles/how-spring-mvc-really-works) также можно изучить вопрос более подробно.
+
+--- 
+#### Как упростить себе жизнь при помощи ```@RequestMapping```
+
+На самом деле, все что перечисленно выше нужно делать только если вы хотите версионировать API по параметрам тела запроса
+(Потому что это единственный параметр, на который нет уже готового функционала в ```RequestMappingHandlerMapping```. 
+Spring предоставляет широкие возможности по определнию метода-обработчика из коробки. 
+
+Конкретно - ```@RequestMapping``` очень мощная аннотация, которая может содержать:
+- *path* == *path* - URL. Он же путь.
+- *method* - метод запроса
+- *params* - параметры запроса (```hostname:/bla?param1=value1,param2=value2```)
+- *headers* - заголовок запроса
+- *consumes* - content-type, с которым работает запрос
+- *produces* - media-type, который создает сервер. Для маппинга запрос должен содержать заголовок *accept* с таким же значением
 
 --- 
 
 #### Так как же правильно версионировать http API?
 
-Вот есть REST, вот есть HATEOS
+Если коротко - стараться этого не делать вообще. Но если это невозможно и версионировать надо - использовать *media-type*
 
-Есть:
-- [Целая [1]](https://www.mnot.net/blog/2011/10/25/web_api_versioning_smackdown) 
-- [Куча [2]](https://www.mnot.net/blog/2012/07/11/header_versioning)
-- [Статей [3]](https://semver.org/)
-- [Про [4]](https://www.mnot.net/blog/2012/12/04/api-evolution)
-- [Версионирование HTTP API [5]](https://www.baeldung.com/rest-versioning) 
+Если не коротко есть:
+- [Целая [3]](https://www.mnot.net/blog/2011/10/25/web_api_versioning_smackdown) 
+- [Куча [4]](https://www.mnot.net/blog/2012/07/11/header_versioning)
+- [Статей [5]](https://semver.org/)
+- [Про [6]](https://www.mnot.net/blog/2012/12/04/api-evolution)
+- [Версионирование [7]](https://www.baeldung.com/rest-versioning) 
+- [HTTP API[8]](https://www.baeldung.com/spring-rest-custom-media-type)
 
 Но что следует помнить всегда - существует разные типы серверов. Есть серверы, которые работаю с 1 вашим клиентом - браузером,
 который пишется также вы (или другая команда, с которыми вы ходите обедать), а есть серверы, который работают с N каких-то
@@ -32,8 +97,25 @@
 В таком случае у вас тоже соверешенно другие проблемы, связанные с обновлением как серверов, так и клиентов.
 
 Как делать правильно в целом не знает никто. HATEOS хоть и дает крутые плюшки, но реально используется очень ограниченным
-количеством компаний.
+количеством компаний. Самым перспективным вариантом видится версионирование через стандартный хедер ```media-type``` запроса. 
+С одной стороны - такой подход работает даже при наличии кеширования, а кеши, как известно, не смотрят на кастомые хедеры
+без дополнительной настройки. С другой - он не создает целых веток новых версий, как в случае с версионированием 
+```URL``` запроса (Все что находится под ```hostname:/v2/...``` является новой веткой со своей имплементацией).
 
 ### Почитать
 
+1. Как можно определить свой ```RequestCondition``` https://github.com/aquatir/code-samples/tree/master/code-sample-java/code-sample-spring-api-versioning
+2. Про работу Spring и Servlet API (подробно) https://dzone.com/articles/how-spring-mvc-really-works
+3. Про сложности версионирования API https://www.mnot.net/blog/2011/10/25/web_api_versioning_smackdown
+4. Почему версионирование через кастомные хедеры - плохая идея https://www.mnot.net/blog/2012/07/11/header_versioning
+5. Что такое семантическое версионирование. Полезно для следующих стетей https://semver.org/
+6. О чем нужно думать при версионировании. Проблемы версионирования через url https://www.mnot.net/blog/2012/12/04/api-evolution
+7. Как версионировать API в Spring https://www.baeldung.com/rest-versioning
+8. Как версионировать API в Spring через media-type https://www.baeldung.com/spring-rest-custom-media-type
 ### Задание
+
+Есть контроллер ```MyController```. В нем 4 метода. Первые два должны мапиться через ```accept-type```. 
+Вторые два через кастомный хедер (Это плохая идея, но ради практики - можно). Требуется написать правильные маппинги 
+для этих методов.
+
+Все тесты должны проходить
