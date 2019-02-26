@@ -1,9 +1,110 @@
-# 03_blah
+# 06_pass_filter_params
 
 ### Цель
 
+Разобраться с тем, каким образом можно передавать данные в Spring контроллеры
+
 ### Теория
+
+Spring WEB предоставляет возможности для определения параметров тела запроса и параметров в url'е сразу в целевые
+типы данных. Для преобразования между HTTP запросом и ```Java POJO``` Spring используется реализации интерфейса
+```HttpMessageConverter```. 
+
+При работе по http можно использовать разные форматы данных. Как правило самым популярным для работы с web фронтом являетяс 
+JSON. Работу между частями приложения (например, микросервисами) происходит обычно либо также в JSON, либо на бинарных протоколах,
+реже (в страшных банках) - XML. Spring позволяет автоматизироть работу по преобразованию данных к целевым Java объектам.
+
+Поумолчанию при обработке запроса Spring Boot подразумевается взаимодействие по JSON, а для преобразования JSON в 
+объекты используется библиотеку ```Jackson```. В таком случае используется конвертор ```MappingJackson2HttpMessageConverter```.
+
+Для большинства нужных вам форматов (XML, Protobuf, Avro) стандартные конверторы либо уже написаны и они включен в starter'ы, 
+либо они не включены в стартеры, но тем неменее уже написаны.
+
+#### Аннотации для работы с запросами при использовании Jackson
+
+По традиции, для изменения поведения Spring/Jackson приложения обычно требуется использовать тысячу различных аннотаций. 
+Рассмотрим некоторые из них.
+
+##### @RequestBody
+```@RequestBody``` - преоразовывает входные параметры из JSON в целевой объект. Пример:
+```
+@Controller
+public class MyController {
+
+    public MyObject call(@RequestBody MyRequest request) {
+        return null;
+    }
+
+    private class MyRequest {
+        private Long id;
+        private Optional<String> name;
+        private LocalDate date;
+    }
+
+    @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+    private class MyObject {
+
+        private Long idId;
+        private String nameName;
+
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+        private LocalDateTime date;
+
+        @JsonProperty("compelte_different_name")
+        private String otherValue;
+    }
+}
+```
+
+При вызове этого метода body http запроса будет пропарсено и преобразовано к объекту ```MyRequest```. Поумолчанию вместо полей,
+которых не будет в изначальном запросе будет проставлен null (или другое значение поумолчанию для поля).
+
+Здесь также продемонстированы следующие фишки Jackson:
+1. Поле с типом ```Optional<T>``` будет корректно преобразовано к нужному типу. Поведение такое как и ожидается от Optional
+2. При передаче дат можно указать четкий формат, который будет мапится в нашу дату при помощи аннотации ```@JsonFormat```
+3. Можно задавать разные имя для фактического параметра в JSON и для поля, на которое оно будет мапится при помощи
+аннотации ```@JsonProperty()```
+4. Можно задавать разные стратегии для именования JSON. Например в примере выше используется ```@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)```.
+Эта аннотации преобразовывает все поля в snake-case, например ```int idId``` превратится в ```id_id```.
+
+
+##### @PathVariable
+```@PathVariable``` используется для получения 1 значения-примитива из URL'а запроса.
+Пример:
+```
+    @GetMapping("/object/{id}/blabla/{something}")
+    public String callz(@PathVariable Integer id, @PathVariable(name = "something") String id2) {
+        System.out.println(id);
+        System.out.println(id2);
+        return "String";
+    }
+```
+
+В данном примере при обработке url запроса значение, которые стоит на месте ```{id}``` будет замаплено в поле ```Integer id```,
+а значение после ```blabla/``` будет замаплено в ```String id2```.
+
+
+#### Валидация запросов
+
+
+--- 
+#### JSON <-> POJO
+
+Подробнее можно почитать в [официальной доке[1]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping)
+
+Аннотация ```@Controller``` также несет с собой аннотацию ```@Component``` (Это видно, если провалиться в исходники).
+Аннотация ```@RestController``` - это ```@Controller``` над которым навешана аннотация ```@ResponseBody```
+
+Note: ```@RestController``` будет обрабатываться только если присуствутет и настроены пара ```HandlerMapping``` и ```HandlerAdapter```.
+В Spring boot приложениях поумолчанию такая пара есть в виде ```RequestMappingHandlerMapping``` и ```RequestMappingHandlerAdapter```.
+
+
 
 ### Почитать
 
+1. Официальная дока https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping
+2. Краткая выжимка по функционалу https://www.baeldung.com/spring-requestmapping
+
 ### Задание
+
+
