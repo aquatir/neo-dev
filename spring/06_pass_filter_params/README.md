@@ -42,10 +42,8 @@ Note: ```@RestController``` будет обрабатываться только
 В Spring boot приложениях поумолчанию такая пара есть в виде ```RequestMappingHandlerMapping``` и ```RequestMappingHandlerAdapter```.
 Это важно только если вы каким-то образом хачите ```@RequestMapping```. В общем случае все должно работать из коробки.
 
-После этого поведение и обработка http в Spring задается при помощи кучи различных аннотаций. Читать официальную доку
-можно начинать [отсюда[1]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping)
-
-
+После этого поведение и обработка http в Spring задается при помощи кучи различных аннотаций или объектов - аргументов методов. 
+Читать официальную доку можно начинать [отсюда[1]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping)
 
 
 #### Аннотации для работы с запросами при использовании Jackson
@@ -112,9 +110,16 @@ public class MyController {
 В данном примере при обработке url запроса значение, которые стоит на месте ```{id}``` будет замаплено в поле ```Integer id```,
 а значение после ```blabla/``` будет замаплено в ```String id2```.
 
+##### 
 
-Это не исчерпывающий список доступных аннотаций. Для более исчерпывающего можно обратить в 
-[официальную доку[2]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-methods)
+Это не исчерпывающий список доступных аннотаций и объектов, к которым можно получить доступ из запроса. 
+Для более исчерпывающего можно обратить в [официальную доку[2]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-methods)
+
+Из интересного можно мапить например:
+1. Хедеры при помощи ```@RequestHeader```
+2. Аттрибуты редиректа при указании объекта к котроллере с типом ```RedirectAttributes```
+3. Аттрибуты сессии (если используются сессии) при помощи ```@SessionAttribute```
+4. Cookie при помощи ```@CookieValue```
 
 #### Валидация запросов
 
