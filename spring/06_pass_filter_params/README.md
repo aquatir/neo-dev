@@ -112,7 +112,9 @@ public class MyController {
 
 ##### @RequestParam и отсутствие аннотации
 
-Можно также мапить примитивы напрямую через аннотацию RequestParam, как в примере:
+Можно также мапить параметры запроса.
+
+Примитины мапятся напрямую через аннотацию ```@RequestParam```, как в примере:
 ```
 curl localhost:8080/object?value=5
 
@@ -128,7 +130,7 @@ curl localhost:8080/object?value=5
 curl localhost:8080/test?firstValue=5&second=aaa&third=bbb
 
     @GetMapping("/test")
-    public String callz4(ComplexObx complexObx) {
+    public String call(ComplexObx complexObx) {
         return complexObx.firstValue + complexObx.second + complexObx.third;
     }
 
@@ -148,7 +150,6 @@ NOTE: При передачи параметров такм образом не�
 - У объекта есть пустой конструктор поумолчанию, а у полей есть сеттеры.
 
 
-
 ##### Прочее
 
 Это не исчерпывающий список доступных аннотаций и объектов, к которым можно получить доступ из запроса. 
@@ -156,9 +157,11 @@ NOTE: При передачи параметров такм образом не�
 
 Из интересного можно мапить например:
 1. Хедеры при помощи ```@RequestHeader```
-2. Аттрибуты редиректа при указании объекта к котроллере с типом ```RedirectAttributes```
+2. Аттрибуты редиректа при указании объекта в методе котроллера с типом ```RedirectAttributes```
 3. Аттрибуты сессии (если используются сессии) при помощи ```@SessionAttribute```
 4. Cookie при помощи ```@CookieValue```
+5. [Matrix-variable[3]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables)
+6. И еще целую кучу всего
 
 #### Валидация запросов
 
@@ -169,7 +172,8 @@ NOTE: При передачи параметров такм образом не�
 
 1. Официальная дока https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping
 2. Аннотации для обработки HTTP в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-methods
-3. Краткая выжимка по функционалу https://www.baeldung.com/spring-requestmapping
+3. Про Matrix Variable https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables
+4. Краткая выжимка по функционалу ```@RequestMapping``` https://www.baeldung.com/spring-requestmapping
 
 ### Задание
 
