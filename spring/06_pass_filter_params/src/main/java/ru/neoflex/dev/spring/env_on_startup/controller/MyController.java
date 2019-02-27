@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-@Controller
+@RestController
 public class MyController {
 
     @PostMapping("/")
@@ -28,6 +30,33 @@ public class MyController {
         System.out.println(id2);
         return "String";
     }
+
+    @GetMapping("/object")
+    public Integer callz3(@RequestParam int value) {
+        System.out.println(value);
+        return value;
+    }
+
+    @GetMapping("/test")
+    public String callz4(ComplexObx complexObx) {
+        return complexObx.firstValue + complexObx.second + complexObx.third;
+    }
+
+    public class ComplexObx {
+        private Integer firstValue;
+        private String second;
+        private String third;
+        public ComplexObx(Integer firstValue, String second, String third) {
+            this.firstValue = firstValue;
+            this.second = second;
+            this.third = third;
+        };
+//        public void setFirstValue(Integer firstValue) {this.firstValue = firstValue;}
+//        public void setSecond(String second) {this.second = second;}
+//        public void setThird(String third) {this.third = third;}
+    }
+
+
 
 
     private class MyRequest {
