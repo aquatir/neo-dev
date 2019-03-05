@@ -138,6 +138,7 @@ curl localhost:8080/test?firstValue=5&second=aaa&third=bbb
         Integer firstValue;
         String second;
         String third;
+        
         public ComplexObx() {};
         public void setFirstValue(Integer firstValue) {this.firstValue = firstValue;}
         public void setSecond(String second) {this.second = second;}
@@ -154,27 +155,40 @@ NOTE: При передачи параметров такм образом не�
 
 Это не исчерпывающий список доступных аннотаций и объектов, к которым можно получить доступ из запроса. 
 Для более исчерпывающего можно обратить в [официальную доку[2]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-methods)
+Или в кратце [здесь[3]]
 
 Из интересного можно мапить например:
 1. Хедеры при помощи ```@RequestHeader```
 2. Аттрибуты редиректа при указании объекта в методе котроллера с типом ```RedirectAttributes```
 3. Аттрибуты сессии (если используются сессии) при помощи ```@SessionAttribute```
 4. Cookie при помощи ```@CookieValue```
-5. [Matrix-variable[3]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables)
+5. [Matrix-variable[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables)
 6. И еще целую кучу всего
 
 #### Валидация запросов
 
-
+По мимо автоматического мапинга полей запроса в объекты Java, Spring предоставляет возможности автоматической валидации запросов.
+Валидация - параметров запросов в частности, как и валидация бинов в общем - это довольно большая тема, которой возможно в 
+будущем будет посвящена отдельная часть. Пока же при необходимости добавить валидацию можно почитать [здесь[5]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation)
 
 
 ### Почитать
 
 1. Официальная дока https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-requestmapping
 2. Аннотации для обработки HTTP в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-methods
-3. Про Matrix Variable https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables
-4. Краткая выжимка по функционалу ```@RequestMapping``` https://www.baeldung.com/spring-requestmapping
+3. Краткая выжимка по функционалу ```@RequestMapping``` https://www.baeldung.com/spring-requestmapping
+4. Про Matrix Variable https://docs.spring.io/spring/docs/current/spring-framework-reference/web.html#mvc-ann-matrix-variables
+5. https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation
 
 ### Задание
+
+1. В контроллере MyController есть 2 метода. Метод ```/testcall1``` принимает объект MyObject из сторонней системы с очень странным форматом
+ (формат можно посмотреть в тесте MyControllerTest). Необходимо, чтобы объек формат другой системы можно было мапить в 
+ объекты MyObject.
+2. Метод ```/testcall2/{path}``` должен вычитывать первый аргумент из параметров урла, а параметр фильтра должен передаваться,
+ как параметр GET запроса.
+ 
+ Тесты должны проходить.
+
 
 
