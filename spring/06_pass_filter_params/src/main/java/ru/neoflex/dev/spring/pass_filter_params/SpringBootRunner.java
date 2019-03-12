@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.pass_filter_params;
 
 
 import org.springframework.boot.SpringApplication;

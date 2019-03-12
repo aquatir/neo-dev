@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup.controller;
+package ru.neoflex.dev.spring.pass_filter_params.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
