@@ -165,6 +165,9 @@ JWT сделан с расчетом на то что проверка подп�
 
 [Здесь[8]](https://jwt.io/) про JWT можно почитать еще. 
 
+[Здесь[9]](https://github.com/aquatir/code-samples/tree/master/code-sample-angular-kotlin/code-sample-jwt-token-example) 
+ и [Здесь[10]](https://github.com/szerhusenBC/jwt-spring-security-demo) можно посмотреть примеры реализации работы с JWT токеном с 1 приватным ключом.
+
 ### Почитать
 
 1. MIT безопасность приложений https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-858-computer-systems-security-fall-2014/video-lectures/
@@ -175,6 +178,8 @@ JWT сделан с расчетом на то что проверка подп�
 6. Тысячи туториалов по security https://www.baeldung.com/security-spring
 7. JWT стандарт https://tools.ietf.org/html/rfc7519
 8. Поддержка JWT https://jwt.io/
+9. Пример реализации аутентификации/атворизации с JWT на Kotlin https://github.com/aquatir/code-samples/tree/master/code-sample-angular-kotlin/code-sample-jwt-token-example
+10. Пример реализации аутентификации/авторизации с JWT на Java https://github.com/szerhusenBC/jwt-spring-security-demo
 
 ### Задание
 
