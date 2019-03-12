@@ -76,7 +76,7 @@ persistence context по ID (внутри одного контекста мож
 ```
     @GetMapping("/myApi")
     @HasAnyRole
-    public Page<MyObject> getByOjbect(Pageable pageable) {
+    public Page<MyEntity> getByEntities(Pageable pageable) {
             return this.myObjectRepository.findAll(pageable);
     }
 ```
@@ -104,8 +104,9 @@ persistence context по ID (внутри одного контекста мож
 Таким образом, получается что мы можем сконструировать запрос к api с пагинацией и сортировкой следующим образом:
 ```/myApi?page=0&size=10&sort=firstname,ASC,false,NATIVE&sort=lastname&sort=age,DESC```
 
-При этом маппинг объекта ```Sort``` произойдет автоматически. Как правило весь этот код по конструированию нужно напистаь 
-1 раз на фронте и просто переиспользовать везде, где требуется.
+При этом маппинг объекта ```Sort``` произойдет автоматически. Как правило весь этот код по конструированию правильных 
+параметров урла нужно написать на фронте один раз, а затем везде переиспользовать.
+
 
 
 ### Почитать
