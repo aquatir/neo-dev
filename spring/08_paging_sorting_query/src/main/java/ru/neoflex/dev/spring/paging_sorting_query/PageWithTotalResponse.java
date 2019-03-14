@@ -27,4 +27,12 @@ public class PageWithTotalResponse<T> {
     public void setTotalElements(long totalElements) {
         this.totalElements = totalElements;
     }
+
+    @Override
+    public String toString() {
+        return "PageWithTotalResponse{" +
+                "data=" + data +
+                ", totalElements=" + totalElements +
+                '}';
+    }
 }

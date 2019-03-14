@@ -17,4 +17,24 @@ public class MyEntity {
 
     @Column(name = "NAME", nullable = true)
     private String name;
+
+
+    public MyEntity() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return "MyEntity{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

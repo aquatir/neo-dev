@@ -99,15 +99,18 @@ persistence context по ID (внутри одного контекста мож
     private final NullHandling nullHandling;
 ```
 
-```Direction``` и ```NullHandling``` - это enum'ы, которые также мапятся автоматически.
+Подстава здесь заключается в том, что на текущий момент из этого списка автоматически резолвятся только property и direction.
+ ignoreCase и nullHandling необходимо руками преврщать в значения. Как минимум пока не закрыта issue https://jira.spring.io/browse/DATACMNS-658.
+ Резолвинг происходит в классе спринговом классе ```SortHandlerMethodArgumentResolver``` - его метод ```public Sort resolveArgument```. 
 
 Таким образом, получается что мы можем сконструировать запрос к api с пагинацией и сортировкой следующим образом:
-```/myApi?page=0&size=10&sort=firstname,ASC,false,NATIVE&sort=lastname&sort=age,DESC```
+```/myApi?page=0&size=10&sort=firstname,ASC&sort=lastname&sort=age,DESC```
 
-При этом маппинг объекта ```Sort``` произойдет автоматически. Как правило весь этот код по конструированию правильных 
-параметров урла нужно написать на фронте один раз, а затем везде переиспользовать.
+Добавить туда ignoreCase и nullHandling пока что нельзя.
 
-
+При этом маппинг property в имя и direction в направление сортировки при конструировании объекта ```Sort``` 
+произойдет автоматически. Как правило весь этот код по конструированию правильных параметров урла нужно написать на 
+фронте один раз, а затем везде переиспользовать.
 
 ### Почитать
 
@@ -116,3 +119,13 @@ persistence context по ID (внутри одного контекста мож
 3. Java Persistence with Hibernate. Manning https://www.manning.com/books/java-persistence-with-hibernate-second-edition
 
 ### Задание
+
+Есть контроллер ```MyEntityController``` с единственным методом вызовом GET /myEntity. Необходимо:
+1) Организовать поддержку пагинации и сортировке при вызове
+2) Конструировать и возвращать объект ```PageWithTotalResponse``` в качестве ответа на запрос
+
+(Необязательно) Бонусные очки даются за поддежку функциональности ignoreCase и nullHandling. (Note: в общем случае её сделать не так-то и сложно. 
+Вопрос только в формате принимаемых данных).
+
+(Необязетльно 2) Еще бонусные очки тому, кто по исходникам ```SortHandlerMethodArgumentResolver``` поймет, почему в настоящий 
+момент резолвится только ```property``` и ```direction```

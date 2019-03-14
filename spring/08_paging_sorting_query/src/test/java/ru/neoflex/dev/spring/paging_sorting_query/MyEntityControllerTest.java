@@ -37,7 +37,7 @@ public class MyEntityControllerTest {
                 .andDo(print())
                 .andReturn();
 
-        var list = (PageWithTotalResponse<MyEntity>) objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        var list = objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
         Assert.assertEquals(6, list.data.size());
         Assert.assertEquals(6, list.getTotalElements());
     }
@@ -52,8 +52,38 @@ public class MyEntityControllerTest {
                 .andDo(print())
                 .andReturn();
 
-        var list = (PageWithTotalResponse<MyEntity>) objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        var list = objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
         Assert.assertEquals(2, list.data.size());
         Assert.assertEquals(6, list.getTotalElements());
+    }
+
+    @Test
+    public void testGetMyEntitiesSorted_nameAscIdDesc() throws Exception {
+        var result = mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/myEntity?sort=name,ASC&sort=id,DESC")
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andReturn();
+
+        var pageWithTotal = objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        Assert.assertEquals("PageWithTotalResponse{data=[{id=6, name=null}, {id=5, name=null}, {id=4, name=null}, {id=2, name=BigAndSmall}, {id=1, name=ONLY_BIG}, {id=3, name=only_small}], totalElements=6}",
+                pageWithTotal.toString());
+    }
+
+    @Test
+    public void testGetMyEntitiesSorted_nameDescIdAsc() throws Exception {
+        var result = mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/myEntity?sort=name,DESC&sort=id,ASC")
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andReturn();
+
+        var pageWithTotal = objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        Assert.assertEquals("PageWithTotalResponse{data=[{id=3, name=only_small}, {id=1, name=ONLY_BIG}, {id=2, name=BigAndSmall}, {id=4, name=null}, {id=5, name=null}, {id=6, name=null}], totalElements=6}",
+                pageWithTotal.toString());
     }
 }
