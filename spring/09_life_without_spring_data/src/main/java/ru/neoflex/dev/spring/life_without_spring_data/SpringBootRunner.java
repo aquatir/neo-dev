@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.life_without_spring_data;
 
 
 import org.springframework.boot.SpringApplication;
