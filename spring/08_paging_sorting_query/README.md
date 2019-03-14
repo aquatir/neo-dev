@@ -99,7 +99,7 @@ persistence context по ID (внутри одного контекста мож
     private final NullHandling nullHandling;
 ```
 
-```Direction``` и ```Nullhandling``` - это enum'ы, которые также мапятся автоматически.
+```Direction``` и ```NullHandling``` - это enum'ы, которые также мапятся автоматически.
 
 Таким образом, получается что мы можем сконструировать запрос к api с пагинацией и сортировкой следующим образом:
 ```/myApi?page=0&size=10&sort=firstname,ASC,false,NATIVE&sort=lastname&sort=age,DESC```
@@ -111,8 +111,8 @@ persistence context по ID (внутри одного контекста мож
 
 ### Почитать
 
-1. Какие хранилища поддерживаюьтся изкоропки в Spring Data https://spring.io/projects/spring-data#overview
-2. Про выбор технологии работы с БД https://dzone.com/articles/jpa-hibernate-alternatives
+1. Какие хранилища поддерживаюьтся из коробки в Spring Data https://spring.io/projects/spring-data#overview
+2. Альтернативы JPA при выборе технологии работы с базами https://dzone.com/articles/jpa-hibernate-alternatives
 3. Java Persistence with Hibernate. Manning https://www.manning.com/books/java-persistence-with-hibernate-second-edition
 
 ### Задание

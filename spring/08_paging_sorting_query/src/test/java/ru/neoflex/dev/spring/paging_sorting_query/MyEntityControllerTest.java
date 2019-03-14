@@ -18,7 +18,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @RunWith(SpringRunner.class)
-@Sql("/test-data.sql")
+@Sql(value = "/add-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = "/remove-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class MyEntityControllerTest {
 
     @Autowired
@@ -37,6 +38,22 @@ public class MyEntityControllerTest {
                 .andReturn();
 
         var list = (PageWithTotalResponse<MyEntity>) objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        Assert.assertEquals(6, list.data.size());
+        Assert.assertEquals(6, list.getTotalElements());
+    }
+
+    @Test
+    public void testGetMyEntities2OutOf6() throws Exception {
+        var result = mockMvc
+                .perform(MockMvcRequestBuilders
+                        .get("/myEntity?page=1&size=2")
+                )
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andReturn();
+
+        var list = (PageWithTotalResponse<MyEntity>) objectMapper.readValue(result.getResponse().getContentAsString(), PageWithTotalResponse.class);
+        Assert.assertEquals(2, list.data.size());
         Assert.assertEquals(6, list.getTotalElements());
     }
 }
