@@ -93,10 +93,12 @@ Spring позволяет на полуавтомате внедрять зав�
 
 Позволит пользоваться сразу всеми возможностями фреймворка для тестирования спринга (кроме тестирования security - для него нужна дополнительная зависимость spring-security-test). 
 
+[Здесь[2]](https://dzone.com/articles/building-your-first-spring-boot-web-application-ex) можно посмотреть мини-гайд по старту Spring Boot приложения.
+
 #### Так что же почитать!
 
-1. Один дядя записал почти [500 мини упражнений по Spring5 + Hibernate[2]](https://coursehunters.net/course/spring-i-hibernate-dlya-novichkov). Очень рекомендую сначала посмотреть. Первые несколько частей можно пропустить, там про установку среды.
-2. У Spring очень хорошая документация и javadoc, поэтому общий совет если что-то не понятно - лезть в документацию или исходники. Для ознакомления рекомендую прочитать всю доку, но для начала достаточного [введения[3]](https://docs.spring.io/spring/docs/current/spring-framework-reference/overview.html#overview) и [первой части (1 глава)[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#spring-core) про основные концепции и философию вреймворка.
+1. Один дядя записал почти [500 мини упражнений по Spring5 + Hibernate[3]](https://coursehunters.net/course/spring-i-hibernate-dlya-novichkov). Очень рекомендую сначала посмотреть. Первые несколько частей можно пропустить, там про установку среды.
+2. У Spring очень хорошая документация и javadoc, поэтому общий совет если что-то не понятно - лезть в документацию или исходники. Для ознакомления рекомендую прочитать всю доку, но для начала достаточного [введения[4]](https://docs.spring.io/spring/docs/current/spring-framework-reference/overview.html#overview) и [первой части (1 глава)[5]](https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#spring-core) про основные концепции и философию вреймворка.
 3. В случае со Spring лучшая теория - это практика. Поэтому далее рекомендую обратить к уже наработаному материалу и пройти спринговые курсы ниже
 
 #### Spring.io курсы
@@ -129,6 +131,7 @@ Spring позволяет на полуавтомате внедрять зав�
 ### Почитать
 
 1. Что такое IoC https://www.youtube.com/watch?v=vFzP2SaMyA0
-2. Мини-курсы по Spring https://coursehunters.net/course/spring-i-hibernate-dlya-novichkov
-3. Spring Overview https://docs.spring.io/spring/docs/current/spring-framework-reference/overview.html#overview
-4. Spring IoC container (1 глава) https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#spring-core
+2. Getting started Spring Boot https://dzone.com/articles/building-your-first-spring-boot-web-application-ex
+3. Мини-курсы по Spring https://coursehunters.net/course/spring-i-hibernate-dlya-novichkov
+4. Spring Overview https://docs.spring.io/spring/docs/current/spring-framework-reference/overview.html#overview
+5. Spring IoC container (1 глава) https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#spring-core
