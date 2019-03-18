@@ -17,7 +17,6 @@ public class DepartmentDao {
     private final DataSource dataSource;
 
     public static final String FIND_ALL = "SELECT * FROM DEPARTMENT";
-    public static String FIND_ONE_BY_ID = "SELECT * FROM DEPARTMENT WHERE ID = ?";
 
     public DepartmentDao(JdbcTemplate jdbcTemplate, DataSource dataSource) {
         this.jdbcTemplate = jdbcTemplate;
