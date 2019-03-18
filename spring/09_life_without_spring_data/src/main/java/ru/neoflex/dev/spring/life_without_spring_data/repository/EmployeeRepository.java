@@ -16,10 +16,6 @@ public class EmployeeRepository {
     private final JdbcTemplate jdbcTemplate;
 
     /* This could be simplified into 2 queries */
-    private final String FIND_ONE_BY_ID_WITH_DEPARTMENT = "SELECT * FROM EMPLOYEE as EMPLOYEE " +
-            "JOIN DEPARTMENT as DEPARTMENT " +
-            "ON (EMPLOYEE.DEPARTMENT_ID = DEPARTMENT.ID)" +
-            " WHERE EMPLOYEE.ID = ?";
 
     public EmployeeRepository(EmployeeDao employeeDao, DepartmentDao departmentDao, JdbcTemplate jdbcTemplate) {
         this.employeeDao = employeeDao;
@@ -44,8 +40,8 @@ public class EmployeeRepository {
         return this.employeeDao.findOneLazyById(id);
     }
 
-    public Employee findOneEageryById(Long id) {
-        return jdbcTemplate.queryForObject(FIND_ONE_BY_ID_WITH_DEPARTMENT, new Object[]{id}, Employee.ROW_MAPPER_WITH_DEPARTMENT);
+    public Employee findOneEagerlyById(Long id) {
+        return null;
     }
 
 

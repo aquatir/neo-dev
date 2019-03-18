@@ -29,6 +29,6 @@ public class DepartmentDao {
     }
 
     public Department findOneLazyById(Long id) {
-        return jdbcTemplate.queryForObject(FIND_ONE_BY_ID, new Object[]{id}, Department.ROW_MAPPER_NO_EMP);
+        return null;
     }
 }

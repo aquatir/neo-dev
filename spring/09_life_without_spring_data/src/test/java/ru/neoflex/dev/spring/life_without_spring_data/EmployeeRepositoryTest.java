@@ -55,7 +55,7 @@ public class EmployeeRepositoryTest {
 
     @Test
     public void test_FindOne_Eager_ExpectSuccess() {
-        var result = employeeRepository.findOneEageryById(4L);
+        var result = employeeRepository.findOneEagerlyById(4L);
         Assert.assertEquals("Susan", result.getName());
         Assert.assertEquals("dep-dep", result.getDepartment().map(Department::getName).orElseThrow());
     }

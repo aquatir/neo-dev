@@ -46,16 +46,6 @@ public class Employee {
                     .build())
             .build();
 
-    public static RowMapper<Employee> ROW_MAPPER_WITH_DEPARTMENT = (rs, rowNum) -> Employee.builder()
-            .id(rs.getLong("EMPLOYEE.ID"))
-            .name(rs.getString("EMPLOYEE.NAME"))
-            .department(Department
-                    .builder()
-                    .id(rs.getLong("DEPARTMENT.ID"))
-                    .name(rs.getString("DEPARTMENT.NAME"))
-                    .build())
-            .build();
-
     public static EmployeeBuilder builder() {
         return new EmployeeBuilder();
     }
