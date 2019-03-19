@@ -34,7 +34,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 штуки - типо найти top 2 записи, отсортированные по полю Age. Более подробно про генерацию запросов из имен методом можно 
 почитить [здесь[1]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation)
 
-Более подробно про репозитории можно почитить [здесь[3]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories),
+Более подробно про репозитории можно почитить [здесь[32](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories),
 а [здесь[3]](https://github.com/spring-projects/spring-data-examples/tree/master/jpa) можно посмотреть примеры работы с JPA.
 
 Но в чем же подлянка? В том, как работает ленивая инициализация объектов внутри транзакции
@@ -42,7 +42,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 #### Маппинги и EntityGraph
 
 Пусть у нас есть некая сущность ```City```. В городе может быть 1 или более сущностей ```Department```, а в кажом из них 
- 1 или более ```Employee```. Получаем такую структуру:
+1 или более ```Employee```. Получаем такую структуру.
+
  
 ```
 @Entity
@@ -58,7 +59,7 @@ public class City {
     private String name;
 
     @OneToMany(mappedBy = "city", fetch = FetchType.LAZY)
-    private List<Department> departments;
+    private Set<Department> departments;
 }
 ```
 ```
@@ -79,7 +80,7 @@ public class Department {
     private City city;
 
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
-    private List<Employee> employees;
+    private Set<Employee> employees;
 }
 ```
 ```
@@ -105,35 +106,240 @@ public class Employee {
 }
 ```
 
-Проблема Spring Data JPA заключается в том, что автогенерация запросов также являются главной убийцей производительности 
-Spring Data JPA...
+Здесь стоит обратить внимание на ленивую загрузку ```@ManyToOne(fetch = FetchType.LAZY)```. Обычно поумолчанию любые связанные 
+сущности в Spring JPA грузят лениво, чтобы не делать лишних запросов.
 
-В чем суть? Во-первых, все еще есть [правила создания SQL запросов[1]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation), 
-по имени метода, ссылка на которые была выше.
+Пусть у нас теперь есть задача - получить список всех сотрудников (```Employee```) из всех городов (```City```).
+Мы пишем запрос 
+```
+    public String printAllEmfsInAllCities() {
+        var city = this.cityRepository.findAll();
 
----
+        var emps = city.stream().map(City::getDepartments)
+                .flatMap(List::stream)
+                .map(Department::getEmployees)
+                .flatMap(List::stream)
+                .map(Employee::getName)
+                .collect(Collectors.joining(","));
 
-А как решать эту проблему? Есть несколько путей
+        return emps;
+    }
+```
+И конечно же он не работает. Так как у нас нет транзакции, а сущность ```Department``` внутри ```City``` еще не инициализорвана.
+
+Фигня вопрос, говорим мы и ставим аннотацию ```@Transactional```.
+
+```
+    @Transactional
+    public String printAllEmfsInAllCities() {
+        var city = this.cityRepository.findAll();
+
+        var emps = city.stream().map(City::getDepartments)
+                .flatMap(Set::stream)
+                .map(Department::getEmployees)
+                .flatMap(Set::stream)
+                .map(Employee::getName)
+                .collect(Collectors.joining(","));
+
+        return emps;
+    }
+```
+
+И все действительно начинает работать. Но только мы только что создали проблему ```n+1``` запроса, так как если посмотреть 
+в генерируемый SQL мы получим следующую картину:
+```
+1. Hibernate: select * from city 
+2. Hibernate: select department from department where department.city_id=?
+3. Hibernate: select from employee where employee.department_id=?
+4. Hibernate: select from employee where employee.department_id=?
+5. Hibernate: select department from department where department.city_id=?
+6. Hibernate: select from employee where employee.department_id=?
+7. Hibernate: select from employee where employee.department_id=?
+```
+
+Что же получается...
+1. Сначала Hibernate вытягивает все сущности ```City``` из базы данных.
+2. Затем в коде у нас идет стрим по всем департаментам. Для каждого из них Hibernate делает 1 запрос, чтобы вытащить
+все ```Department```. Этот стрим преобразуется в стрим из департаментов .
+3. Для каждого из департаментов Hibernate делает еще по 1 запросу, чтобы вытащить всех ```Employee```.
+
+И в итоге получается 7 запросов вместо 1. Это так называемая проблема ```N+1``` запросов. Еще 1 пример такой проблемы можн
+посмотреть [здесь[4]](https://medium.com/@gdprao/fixing-hibernate-n-1-problem-in-spring-boot-application-a99c38c5177d)
+
+Это одна из причин нелюбви к JPA в Spring. Есть просто способ починить поведение (добавить ```@Transactional``), 
+но он фундаментально неправильный, а злоупотреблением им приводит к неэффективным программам.
+
+Но остается вопрос - как сделать все в 1 запрос? Есть несколько путей:
 
 ##### HQL
 
-JPA говорит: у вас должен быть язык запросов JPQL. Hibernate имееют такой язык под названием HQL. [Вот его документация[4]](https://docs.jboss.org/hibernate/orm/3.3/reference/en/html/queryhql.html)
+JPA говорит: у вас должен быть язык запросов JPQL. Hibernate имееют такой язык под названием HQL. 
+[Вот его документация[5]](https://docs.jboss.org/hibernate/orm/3.3/reference/en/html/queryhql.html)
 
+Мы можем написать наш запрос в виде HQL запроса.
+
+
+
+--- 
+При этом следует помнить о том, что нативные запросы могут мапиться не так, как мы ожидаем. Пример такой запрос:
+```
+    @Query(value = "SELECT * FROM CITY " +
+            "LEFT OUTER JOIN DEPARTMENT ON CITY.ID = DEPARTMENT.CITY_ID " +
+            "LEFT OUTER JOIN EMPLOYEE on DEPARTMENT.ID = EMPLOYEE.DEPARTMENT_ID", nativeQuery = true)
+    Set<City> findAllBy();
+```
+Создаст такой SQL:
+```
+select *
+    from city 
+    left outer join department on city.id=department.city_id 
+    left outer join employee on department.id=employee.department_id
+```
+
+И казалось бы все хорошо. Но разыменование результата этого запроса не произойдет автоматически в сущность City. И в итоге мы 
+получим ту же самую ситуацию, что и с ```N+1``` запросами, а именно
+
+```
+1. Hibernate: SELECT CITY.ID, CITY.NAME, DEPARTMENT.ID, DEPARTMENT.NAME, EMPLOYEE.ID, EMPLOYEE.NAME FROM CITY LEFT OUTER JOIN DEPARTMENT ON CITY.ID = DEPARTMENT.CITY_ID LEFT OUTER JOIN EMPLOYEE on DEPARTMENT.ID = EMPLOYEE.DEPARTMENT_ID
+2. Hibernate: select department from department where department.city_id=?
+3. Hibernate: select from employee where employee.department_id=?
+4. Hibernate: select from employee where employee.department_id=?
+5. Hibernate: select department from department where department.city_id=?
+6. Hibernate: select from employee where employee.department_id=?
+7. Hibernate: select from employee where employee.department_id=?
+```
+
+Но мы можем обработать их руками! Только надо будет еще дать выбираемым столбцам алиасы. Тогда наш запрос будет выглядеть так:
+```
+    @Query(value = "SELECT " +
+            "CITY.ID as CITY_ID, CITY.NAME as CITY_NAME, " +
+            "DEPARTMENT.ID as DEPARTMENT_ID, DEPARTMENT.NAME as DEPARTMENT_NAME, " +
+            "EMPLOYEE.ID as EMPLOYEE_ID, EMPLOYEE.NAME as EMPLOYEE_NAME, EMPLOYEE.AGE as EMPLOYEE_AGE FROM CITY " +
+            "LEFT OUTER JOIN DEPARTMENT ON CITY.ID = DEPARTMENT.CITY_ID " +
+            "LEFT OUTER JOIN EMPLOYEE on DEPARTMENT.ID = EMPLOYEE.DEPARTMENT_ID", nativeQuery = true)
+    List<Object[]> findAllBy();
+```
+
+И нам вернется массив каких-то объектов. Мы можем сначала превратить его в мапу из мап, а затем превратить в список ```City```
+```
+Map<City, Map<Department, List<Employee>>> result = unstructuredCities.stream().collect(Collectors.groupingBy(
+                entryAsCity -> new City(
+                        bigIntegerAsLong(entryAsCity[0]),
+                        (String) entryAsCity[1]),
+                Collectors.groupingBy(
+                        entryAsDepartment -> new Department(
+                                bigIntegerAsLong(entryAsDepartment[2]),
+                                (String) entryAsDepartment[3]),
+                        Collectors
+                                .mapping(entryAsEmployee -> new Employee(
+                                                bigIntegerAsLong(entryAsEmployee[4]),
+                                                (String) entryAsEmployee[5],
+                                                bigIntegerAsLong(entryAsEmployee[6])),
+                                        Collectors.toList()))
+        ));
+
+        for (City city : result.keySet()) {
+            var listOfDeps = new HashSet<Department>();
+            for (Department department : result.get(city).keySet()) {
+
+                var listOfEmps = new HashSet<Employee>();
+                for (Employee employee : result.get(city).get(department)) {
+                    employee.setDepartment(department);
+                    listOfEmps.add(employee);
+
+                }
+                department.setCity(city);
+                department.setEmployees(listOfEmps);
+                listOfDeps.add(department);
+            }
+            city.setDepartments(listOfDeps);
+        }
+
+        var cities = result.keySet();
+```
+
+Это выглядит довольно страшно (и оно так и есть), но на самом деле здесь происходит довольно простое преобразование
+1. Сначала мы говорим, что хотим получить мапу с ключами - City и значениями в виде мапы из департаментов на список Employee 
+(Важно: необходимо, чтобы у ```City``` и ```Department``` были определены ```equals``` и ```hashCode```).
+2. Затем говорим, что первый и второй аргумент возвращаемого из SQL результата является объектом ```City```. Это будет ключ
+новой мапы
+3. А значение - будет еще 1 группировка. На этот раз ключ новой мапы будет ```Department```, который конструируется из 2 и 3 
+поля результата, а его значением будет список ```Employee```, который мы конструируем через ```Collectors.mapping``` из 3 
+последних полей.
+
+2/3 этого кода можно было бы избежать, если бы мы возвращали не ```List<Object[]>```, а какой-нибудь ```List<CityDepEmpJoined>```. 
+Так тоже можно делать в JPA. 
 
 ##### EntityGraph
 
+Суть: Можно дать Hibernate подсказки о том, какие ленивые сущности нужно грузить сразу же. Для этого используются 
+```EntityGraph```. Его можно поставить прямо над методом, а можно сначала дать ему имя (тогда он называется ```NamedEntityGraph```, 
+а лишь затем использовать). [Вот раздел доки[6]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph), где описаны эти графы.
 
-Есть еще 1 путь: **Выбросьте этот JPA и пишите на JDBC Template / JOOQ**.
+Все что нам нужно это 
+1. Опеределить ```NamedEntityGraph```, 
+2. Определить в репозитории некий метод, который запрашивает все сущности из базы, т.к. над ним нам надо задать использование 
+```EntityGraph```
+3. Сказать методу из п. 2 использовать наш ```EntityGraph```
 
+
+Берем ```NamedEntityGraph```
+```
+@NamedEntityGraphs({
+        @NamedEntityGraph(name = "city.departments.employees", 
+                attributeNodes = {
+                        @NamedAttributeNode(value = "departments", subgraph = "departments.employees"),
+                },
+                subgraphs = {
+                        @NamedSubgraph(name = "departments.employees",
+                                attributeNodes = @NamedAttributeNode("employees")),
+                }),
+})
+```
+
+Создаем метод, запрашивающий все сущности
+```
+@Repository
+public interface CityRepository extends JpaRepository<City, Long> {
+
+    @EntityGraph(value = "city.departments.employees", type = EntityGraph.EntityGraphType.FETCH)
+    Set<City> findAllBy();
+}
+```
+
+Запускаем тест и получаем запрос:
+```
+select *
+    from city 
+    left outer join department on city.id=department.city_id 
+    left outer join employee on department.id=employee.department_id
+```
+
+Здесь все хорошо за исключением того, что в JPA 2.1. не поддерживаются запросы по еще более глубоким структурам (Например, 
+нельзя было бы дальше запросить одну из сущностей, внутри ```Employee```. Такие запросы можно делать только через один из 
+API, о которых речь пойдет ниже или через  ```@Query```)
+
+##### Другие способы 
+
+Есть и другие способы решить проблему ```N+1``` запроса. 
+1. Использовать Criteria API через ```Entity Manager``` ([тут есть пример[7]](https://www.baeldung.com/spring-data-criteria-queries)) 
+или [Specification API[7]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications) 
+или [QuerDSL[8]](http://www.querydsl.com/). Все эти API предоставляют возможности по созданию Join'ов в коде.
+2. Писать на JDBC Template / JOOQ / etc
 
 ### Почитать
 
 1. Создание SQL запроса по тексту метода https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
 2. Документация https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories
 3. Официальные примеры Spring Data JPA https://github.com/spring-projects/spring-data-examples/tree/master/jpa
-4. Документация HQL https://docs.jboss.org/hibernate/orm/3.3/reference/en/html/queryhql.html
+4. Пример N+1 запроса https://medium.com/@gdprao/fixing-hibernate-n-1-problem-in-spring-boot-application-a99c38c5177d
+5. Документация HQL https://docs.jboss.org/hibernate/orm/3.3/reference/en/html/queryhql.html
+6. Entity Graph https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph
+7. Пример использования Criteria API https://www.baeldung.com/spring-data-criteria-queries
+7. Specification API https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications
+8. Query DSL http://www.querydsl.com/
  
-- queryDSL http://www.querydsl.com/
+- queryDSL 
 
 
 ### Задание

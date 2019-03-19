@@ -23,12 +23,12 @@ public class EmployeeRepositoryTest {
     @Transactional
     public void test_StreamGetAll_ExpectSuccess() {
         var numOfEntries = this.employeeRepository.findAllAsStreamBy().count();
-        Assert.assertEquals(4, numOfEntries);
+        Assert.assertEquals(8, numOfEntries);
     }
 
     @Test
     public void test_MaybeFindOne_ExceptSuccess() {
-        var maybeEmployee = this.employeeRepository.findMaybeOneById(5L);
+        var maybeEmployee = this.employeeRepository.findMaybeOneById(999L);
         Assert.assertFalse(maybeEmployee.isPresent());
     }
 
