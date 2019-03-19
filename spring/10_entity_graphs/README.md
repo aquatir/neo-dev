@@ -41,9 +41,68 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
 #### Маппинги и EntityGraph
 
-Пусть у нас есть сущность ```Employee```:
+Пусть у нас есть некая сущность ```City```. В городе может быть 1 или более сущностей ```Department```, а в кажом из них 
+ 1 или более ```Employee```. Получаем такую структуру:
+ 
 ```
+@Entity
+@Table(name = "CITY")
+public class City {
 
+    @Id
+    @GeneratedValue
+    @Column(name = "ID")
+    private Long id;
+
+    @Column(name = "NAME", nullable = true)
+    private String name;
+
+    @OneToMany(mappedBy = "city", fetch = FetchType.LAZY)
+    private List<Department> departments;
+}
+```
+```
+@Entity
+@Table(name = "DEPARTMENT")
+public class Department {
+
+    @Id
+    @GeneratedValue
+    @Column(name = "ID")
+    private Long id;
+
+    @Column(name = "NAME", nullable = true)
+    private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "CITY_ID", nullable = true)
+    private City city;
+
+    @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
+    private List<Employee> employees;
+}
+```
+```
+@Entity
+@Table(name = "EMPLOYEE")
+public class Employee {
+
+    @Id
+    @GeneratedValue()
+    @Column(name = "ID")
+    private Long id;
+
+    @Column(name = "NAME", nullable = true)
+    private String name;
+
+    @Column(name = "AGE", nullable = true)
+    private Long age;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "DEPARTMENT_ID", nullable = true)
+    private Department department;
+
+}
 ```
 
 Проблема Spring Data JPA заключается в том, что автогенерация запросов также являются главной убийцей производительности 

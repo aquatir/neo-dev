@@ -1,6 +1,5 @@
 package ru.neoflex.dev.spring.entity_graphs.entity;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -14,9 +13,8 @@ import java.util.List;
 @Table(name = "CITY")
 public class City {
 
-
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     @Column(name = "ID")
     private Long id;
 

@@ -1,6 +1,5 @@
 package ru.neoflex.dev.spring.entity_graphs.entity;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -17,7 +16,7 @@ import java.util.List;
 public class Department {
 
     @Id
-    @GeneratedValue()
+    @GeneratedValue
     @Column(name = "ID")
     private Long id;
 
@@ -30,5 +29,4 @@ public class Department {
 
     @OneToMany(mappedBy = "department", fetch = FetchType.LAZY)
     private List<Employee> employees;
-
 }
