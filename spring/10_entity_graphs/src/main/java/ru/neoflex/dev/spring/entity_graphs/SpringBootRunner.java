@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.entity_graphs;
 
 
 import org.springframework.boot.SpringApplication;
