@@ -84,4 +84,47 @@ public class Department {
     public int hashCode() {
         return Objects.hash(id, name);
     }
+
+    public static DepartmentBuilder builder() {
+        return new DepartmentBuilder();
+    }
+
+    public static final class DepartmentBuilder {
+        private Long id;
+        private String name;
+        private City city;
+        private Set<Employee> employees;
+
+        private DepartmentBuilder() {
+        }
+
+        public DepartmentBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public DepartmentBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public DepartmentBuilder city(City city) {
+            this.city = city;
+            return this;
+        }
+
+        public DepartmentBuilder employees(Set<Employee> employees) {
+            this.employees = employees;
+            return this;
+        }
+
+        public Department build() {
+            Department department = new Department();
+            department.setId(id);
+            department.setName(name);
+            department.setCity(city);
+            department.setEmployees(employees);
+            return department;
+        }
+    }
 }

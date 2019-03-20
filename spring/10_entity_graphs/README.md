@@ -178,16 +178,61 @@ JPA говорит: у вас должен быть язык запросов JP
 
 Мы можем написать наш запрос в виде HQL запроса.
 
+```
+@Query("SELECT c" +
+    " FROM City c" +
+    " LEFT JOIN FETCH c.departments d" +
+    " LEFT JOIN FETCH d.employees e")
+Set<City> findAllBy();
+```
+
+И этого хорошо, потому что такой запрос превратиться в SQL:
+
+```
+Hibernate: 
+    select *
+    from city 
+    left outer join department on city.id=department.city_id 
+    left outer join employee on department.id=employees.department_id
+```
+
+Магия Hibernate сама замапит все сущности в ```City```. ```@Query``` - это хорошо.
+Этот же можно сначала написать над сущностью в виде ```NamedQuery```.
+
+```
+@Entity
+@Table(name = "CITY")
+@NamedQuery(
+        name = "city.departments.employees",
+        query = "SELECT c" +
+                " FROM City c" +
+                " LEFT JOIN FETCH c.departments d" +
+                " LEFT JOIN FETCH d.employees e"
+)
+public class City {
+```
+
+И запроса в репозитории
+```
+    @Query(name = "city.departments.employees")
+    Set<City> findAllBy();
+```
 
 
---- 
-При этом следует помнить о том, что нативные запросы могут мапиться не так, как мы ожидаем. Пример такой запрос:
+##### Native query
+
+Возможно нам захочется получить максимум скорости и спользовать ручное преобразование объектов вместо автоматического,
+которое дает JPA/Hibernate. В таком случае конечно лучше использовать Spring JDBC Template / JOOQ / QueryDSL / etc, но
+можно написать и нативный запрос.
+
+Надо помнить что нативные запросы не имею мапить себя сами. Другими словами такой запрос
 ```
     @Query(value = "SELECT * FROM CITY " +
             "LEFT OUTER JOIN DEPARTMENT ON CITY.ID = DEPARTMENT.CITY_ID " +
             "LEFT OUTER JOIN EMPLOYEE on DEPARTMENT.ID = EMPLOYEE.DEPARTMENT_ID", nativeQuery = true)
-    Set<City> findAllBy();
+    Set<City[]> findAllBy();
 ```
+
 Создаст такой SQL:
 ```
 select *
@@ -220,21 +265,27 @@ select *
     List<Object[]> findAllBy();
 ```
 
-И нам вернется массив каких-то объектов. Мы можем сначала превратить его в мапу из мап, а затем превратить в список ```City```
+И нам вернется массив каких-то объектов (Даже не ```ResultSet```!). Мы можем сначала превратить его в мапу из мап, а затем превратить в список ```City```
 ```
-Map<City, Map<Department, List<Employee>>> result = unstructuredCities.stream().collect(Collectors.groupingBy(
-                entryAsCity -> new City(
-                        bigIntegerAsLong(entryAsCity[0]),
-                        (String) entryAsCity[1]),
+        Map<City, Map<Department, List<Employee>>> result = unstructuredCities.stream().collect(Collectors.groupingBy(
+                entryAsCity ->
+                        City.builder()
+                                .id(bigIntegerAsLong(entryAsCity[0]))
+                                .name((String) entryAsCity[1])
+                                .build(),
                 Collectors.groupingBy(
-                        entryAsDepartment -> new Department(
-                                bigIntegerAsLong(entryAsDepartment[2]),
-                                (String) entryAsDepartment[3]),
+                        entryAsDepartment ->
+                                Department.builder()
+                                        .id(bigIntegerAsLong(entryAsDepartment[2]))
+                                        .name((String) entryAsDepartment[3])
+                                        .build(),
                         Collectors
-                                .mapping(entryAsEmployee -> new Employee(
-                                                bigIntegerAsLong(entryAsEmployee[4]),
-                                                (String) entryAsEmployee[5],
-                                                bigIntegerAsLong(entryAsEmployee[6])),
+                                .mapping(entryAsEmployee ->
+                                                Employee.builder()
+                                                        .id(bigIntegerAsLong(entryAsEmployee[4]))
+                                                        .name((String) entryAsEmployee[5])
+                                                        .age(bigIntegerAsLong(entryAsEmployee[6]))
+                                                        .build(),
                                         Collectors.toList()))
         ));
 
@@ -259,7 +310,7 @@ Map<City, Map<Department, List<Employee>>> result = unstructuredCities.stream().
 ```
 
 Это выглядит довольно страшно (и оно так и есть), но на самом деле здесь происходит довольно простое преобразование
-1. Сначала мы говорим, что хотим получить мапу с ключами - City и значениями в виде мапы из департаментов на список Employee 
+1. Сначала мы говорим, что хотим получить мапу с ключами - ```City``` и значениями в виде мапы из департаментов на список Employee 
 (Важно: необходимо, чтобы у ```City``` и ```Department``` были определены ```equals``` и ```hashCode```).
 2. Затем говорим, что первый и второй аргумент возвращаемого из SQL результата является объектом ```City```. Это будет ключ
 новой мапы
@@ -267,8 +318,8 @@ Map<City, Map<Department, List<Employee>>> result = unstructuredCities.stream().
 поля результата, а его значением будет список ```Employee```, который мы конструируем через ```Collectors.mapping``` из 3 
 последних полей.
 
-2/3 этого кода можно было бы избежать, если бы мы возвращали не ```List<Object[]>```, а какой-нибудь ```List<CityDepEmpJoined>```. 
-Так тоже можно делать в JPA. 
+2/3 этого кода можно было бы избежать (Или спрятать в другое место), если бы мы возвращали не ```List<Object[]>```, а 
+какой-нибудь ```List<CityDepEmpJoined>```, т.е. некий объект на который должны мапится значения из запроса (в JPA так можно делать)
 
 ##### EntityGraph
 
@@ -339,7 +390,11 @@ API, о которых речь пойдет ниже или через  ```@Que
 7. Specification API https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications
 8. Query DSL http://www.querydsl.com/
  
-- queryDSL 
-
-
 ### Задание
+
+Дана структура из City -> Departments -> Employee, описанная выше. Необходимо реализовать запрос в ```CityRepository``` так,
+чтобы он в 1 запрос возвращал список всех City с заполненным списком Department и заполненным список Employee внутри 
+каждого Department.
+
+Этот запрос должен работать за 1 раундтрип в БД (т.е. только 1 select). Note: логирование SQL уже включено. В ```application.yml```
+есть параметр ```spring.jpa.show-sql: true```.

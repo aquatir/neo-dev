@@ -68,6 +68,10 @@ public class Employee {
         this.department = department;
     }
 
+
+
+
+
     @Override
     public String toString() {
         return "Employee{" +
@@ -75,5 +79,48 @@ public class Employee {
                 ", name='" + name + '\'' +
                 ", age='" + age + '\'' +
                 '}';
+    }
+
+    public static EmployeeBuilder builder() {
+        return new EmployeeBuilder();
+    }
+
+    public static final class EmployeeBuilder {
+        private Long id;
+        private String name;
+        private Long age;
+        private Department department;
+
+        private EmployeeBuilder() {
+        }
+
+        public EmployeeBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public EmployeeBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public EmployeeBuilder age(Long age) {
+            this.age = age;
+            return this;
+        }
+
+        public EmployeeBuilder department(Department department) {
+            this.department = department;
+            return this;
+        }
+
+        public Employee build() {
+            Employee employee = new Employee();
+            employee.setId(id);
+            employee.setName(name);
+            employee.setAge(age);
+            employee.setDepartment(department);
+            return employee;
+        }
     }
 }

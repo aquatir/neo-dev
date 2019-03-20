@@ -5,7 +5,6 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.Objects;
@@ -13,6 +12,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "CITY")
+
 public class City {
 
     @Id
@@ -59,6 +59,8 @@ public class City {
     }
 
 
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -71,5 +73,42 @@ public class City {
     @Override
     public int hashCode() {
         return Objects.hash(id, name);
+    }
+
+    public static CityBuilder builder() {
+        return new CityBuilder();
+    }
+
+    public static final class CityBuilder {
+        private Long id;
+        private String name;
+        private Set<Department> departments;
+
+        private CityBuilder() {
+        }
+
+
+        public CityBuilder id(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public CityBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CityBuilder departments(Set<Department> departments) {
+            this.departments = departments;
+            return this;
+        }
+
+        public City build() {
+            City city = new City();
+            city.setId(id);
+            city.setName(name);
+            city.setDepartments(departments);
+            return city;
+        }
     }
 }
