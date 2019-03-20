@@ -13,8 +13,9 @@ Java persistence API - прекрасная абстракция для быст
 
 Активация работы с Spring JPA начинается с аннотации ```@EnableJpaRepositories``` (В Spring boot она ставится автоматически при
 добавлении в зависимости соответствующего стартера). Главным интрфейсом в Spring Data JPA является интерфейс ```Repository``` 
-и кучка других интерфейсов, наслдедующихся он него. Основными из них являются  ```JpaRepository```. 
-Этот интерфейс предоставляет целую пачку запросов - запрос одного/нескольких элемента, paging/sorting и т.д. прямо из коробки.
+и кучка других интерфейсов, наследующихся он него. Самым популярным и основными в работе из них являются  ```JpaRepository```. 
+Этот интерфейс предоставляет целую пачку запросов - запрос одного/нескольких элемента, paging/sorting, удаление в виде Batch, 
+поиск по примеру и т.д. прямо из коробки.
  
 Киллер-фичей Spring Data JPA является автоматическая генерация запросов из имени метода. Такой подход позволяет не писать
 SQL вообще! В Spring Data мы можем абсолютно легально написать:
@@ -34,12 +35,12 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 штуки - типо найти top 2 записи, отсортированные по полю Age. Более подробно про генерацию запросов из имен методом можно 
 почитить [здесь[1]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation)
 
-Более подробно про репозитории можно почитить [здесь[32](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories),
-а [здесь[3]](https://github.com/spring-projects/spring-data-examples/tree/master/jpa) можно посмотреть примеры работы с JPA.
+А подробности по поводу абстракции репозиториев есть [здесь[2](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories),
+Еще вот [тут[3]](https://github.com/spring-projects/spring-data-examples/tree/master/jpa) можно посмотреть примеры работы с JPA.
 
-Но в чем же подлянка? В том, как работает ленивая инициализация объектов внутри транзакции
+И все бы выглядело прекрасно, но в JPA есть 1 фатальное НО. А именно - работа с ленивыми коллекциями.
 
-#### Маппинги и EntityGraph
+#### Маппинг ленивых коллекций  
 
 Пусть у нас есть некая сущность ```City```. В городе может быть 1 или более сущностей ```Department```, а в кажом из них 
 1 или более ```Employee```. Получаем такую структуру.
@@ -163,13 +164,15 @@ public class Employee {
 все ```Department```. Этот стрим преобразуется в стрим из департаментов .
 3. Для каждого из департаментов Hibernate делает еще по 1 запросу, чтобы вытащить всех ```Employee```.
 
-И в итоге получается 7 запросов вместо 1. Это так называемая проблема ```N+1``` запросов. Еще 1 пример такой проблемы можн
+И в итоге получается 7 запросов вместо 1. Это так называемая проблема ```N+1``` запросов. Еще на 1 пример такой же проблемы можно
 посмотреть [здесь[4]](https://medium.com/@gdprao/fixing-hibernate-n-1-problem-in-spring-boot-application-a99c38c5177d)
 
-Это одна из причин нелюбви к JPA в Spring. Есть просто способ починить поведение (добавить ```@Transactional``), 
-но он фундаментально неправильный, а злоупотреблением им приводит к неэффективным программам.
+Это одна из причин нелюбви к JPA в Spring. У вас есть запрос, который вроде как работает, после того, как вы поставили 
+```@Transactional```, но такой способ фикса хоть и является рабочим, он одновременно является фундаментально неправильный, 
+а злоупотреблением им приводит к неэффективным программам.
 
-Но остается вопрос - как сделать все в 1 запрос? Есть несколько путей:
+Хочется, чтобы вещи, которые можно сделать в 1 запрос дейсвительно делались в 1 запрос. Как этого достичь? Есть довольно много
+путей
 
 ##### HQL
 
@@ -186,7 +189,7 @@ JPA говорит: у вас должен быть язык запросов JP
 Set<City> findAllBy();
 ```
 
-И этого хорошо, потому что такой запрос превратиться в SQL:
+И этого хороший запрос, потому что такой запрос превратиться в SQL:
 
 ```
 Hibernate: 
@@ -196,8 +199,8 @@ Hibernate:
     left outer join employee on department.id=employees.department_id
 ```
 
-Магия Hibernate сама замапит все сущности в ```City```. ```@Query``` - это хорошо.
-Этот же можно сначала написать над сущностью в виде ```NamedQuery```.
+Магия Hibernate сама замапит все сущности в ```City```. Такой же запрос можно написать в виде ```NamedQuery```. 
+Сначала определим ```NamedQuery``` над нашим ```City```.
 
 ```
 @Entity
@@ -212,12 +215,15 @@ Hibernate:
 public class City {
 ```
 
-И запроса в репозитории
+Затем вызовем его в репозитории
 ```
+@Repository
+public interface CityRepository extends JpaRepository<City, Long> {
+
     @Query(name = "city.departments.employees")
     Set<City> findAllBy();
+}
 ```
-
 
 ##### Native query
 
@@ -321,9 +327,13 @@ select *
 2/3 этого кода можно было бы избежать (Или спрятать в другое место), если бы мы возвращали не ```List<Object[]>```, а 
 какой-нибудь ```List<CityDepEmpJoined>```, т.е. некий объект на который должны мапится значения из запроса (в JPA так можно делать)
 
+Ну и разумеется ручное преобразование будет работать быстрее, чем автоматическое в ```Hibernate```. Правда, как и всегда, 
+когда речь косается производительности - необходимо замерить результаты до и результаты после, чтобы убедиться, что 
+наши "оптимизации" действительно работают.
+
 ##### EntityGraph
 
-Суть: Можно дать Hibernate подсказки о том, какие ленивые сущности нужно грузить сразу же. Для этого используются 
+Суть: Можно дать Hibernate подсказки о том, какие ленивые сущности нужно грузить. Для этого используются 
 ```EntityGraph```. Его можно поставить прямо над методом, а можно сначала дать ему имя (тогда он называется ```NamedEntityGraph```, 
 а лишь затем использовать). [Вот раздел доки[6]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph), где описаны эти графы.
 
@@ -374,8 +384,8 @@ API, о которых речь пойдет ниже или через  ```@Que
 
 Есть и другие способы решить проблему ```N+1``` запроса. 
 1. Использовать Criteria API через ```Entity Manager``` ([тут есть пример[7]](https://www.baeldung.com/spring-data-criteria-queries)) 
-или [Specification API[7]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications) 
-или [QuerDSL[8]](http://www.querydsl.com/). Все эти API предоставляют возможности по созданию Join'ов в коде.
+или [Specification API[8]](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications) 
+или [QuerDSL[9]](http://www.querydsl.com/). Все эти API предоставляют возможности по созданию Join'ов в коде.
 2. Писать на JDBC Template / JOOQ / etc
 
 ### Почитать
@@ -387,8 +397,8 @@ API, о которых речь пойдет ниже или через  ```@Que
 5. Документация HQL https://docs.jboss.org/hibernate/orm/3.3/reference/en/html/queryhql.html
 6. Entity Graph https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.entity-graph
 7. Пример использования Criteria API https://www.baeldung.com/spring-data-criteria-queries
-7. Specification API https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications
-8. Query DSL http://www.querydsl.com/
+8. Specification API https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#specifications
+9. Query DSL http://www.querydsl.com/
  
 ### Задание
 
@@ -398,3 +408,5 @@ API, о которых речь пойдет ниже или через  ```@Que
 
 Этот запрос должен работать за 1 раундтрип в БД (т.е. только 1 select). Note: логирование SQL уже включено. В ```application.yml```
 есть параметр ```spring.jpa.show-sql: true```.
+
+Быстро вызвать этот метод можно при помощи теста в ```CityServiceTest```
