@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "name": "testEmp",
+  "age": 5,
+  "department": {
+    "id": 1,
+    "name": "testDep"
+  }
+}

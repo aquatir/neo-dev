@@ -6,6 +6,21 @@ public class DepartmentDto {
 
     public DepartmentDto() {};
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public static DepartmentDtoBuilder builder() {
         return new DepartmentDtoBuilder();
