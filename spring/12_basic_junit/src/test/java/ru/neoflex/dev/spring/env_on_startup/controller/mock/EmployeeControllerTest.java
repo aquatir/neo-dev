@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup.controller;
+package ru.neoflex.dev.spring.env_on_startup.controller.mock;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,6 +10,7 @@ import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.neoflex.dev.spring.env_on_startup.controller.EmployeeController;
 import ru.neoflex.dev.spring.env_on_startup.entity.Employee;
 import ru.neoflex.dev.spring.env_on_startup.service.EmployeeService;
 

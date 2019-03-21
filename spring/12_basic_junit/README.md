@@ -273,3 +273,10 @@ public class SampleWebClientTests {
 5. Тестирование при помощи @RestClientTest https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-client
 
 ### Задание
+
+Написать следующие тесты:
+- ```DepartmentDtoTest```. 2 теста на сериализацию/десериализацию Department
+- ```DepartmentRepositoryTest```. 2 теста на запрос 1 департамента или всех депаратментов
+- ```DepartmentControllerTest```. Надо протестировать ```DepartmentController``` при помощи полного ```ApplicationContext```
+ и одного из инстументов для web-тестирования. Тесты должны запрашивать информацию из реальных данных, которые есть в .sql
+ файлах внутри resources. NOTE: Это не копия теста ```EmployeeControllerTest```. Здесь надо использовать РЕАЛЬНЫЙ веб контекст
