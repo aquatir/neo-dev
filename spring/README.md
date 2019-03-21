@@ -23,7 +23,7 @@
 
 Задания:
 - ```08_paging_sorting_query/```	-> Как работает пагинация и фильтрация в Spring Data
-- ```09_life_without_spring_data/```	-> Как работать со своим Connection Pool.
+- ```09_life_without_spring_data/```	-> Как работать с Spring JDBC Template.
 - ```10_entity_graphs/```		-> Как бороться с неоптимальными запросами в Spring Data при генерации запросов из имен методов в репозиториях
 - ```11_speicification_api/```		-> Что можно делать при помощи Specification API.
 
