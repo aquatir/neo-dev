@@ -32,8 +32,9 @@ public class MyTestClass {
 
 }
 ```
-Такой подход работает всегда, но иногда нужно конфигурировать контекст как-то по особенному. Сейчас мы рассмотрим, какие есть
-виды Spring Boot тестов. Делается это как правило, чтобы сэкономить время поднятия контекста. 
+Такой подход работает всегда, но иногда хочется сконфигурировать только часть контекст, особенно если приложение очень 
+большой. Сейчас мы рассмотрим, какие есть виды Spring Boot тестов. Делается это как правило, 
+чтобы сэкономить время поднятия контекста. 
 
 #### JSON тесты
 
@@ -208,7 +209,7 @@ public class EmployeeRepositoryTest {
 
 #### Интересные фишки Junit + Spring boot тестов
 
-##### Можно ловить аутпут тестов!
+##### Можно ловить аутпут тестов
 
 ```
 
@@ -226,6 +227,43 @@ public class Employee {
 }
 ```
 
+##### Можно добвлять проперти в Environment прямо в тесте
+
+```
+    public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+        public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
+            TestPropertyValues.of(
+                    "spring.datasource.url=" + postgres.getJdbcUrl(),
+                    "spring.datasource.username=" + postgres.getUsername(),
+                    "spring.datasource.password=" + postgres.getPassword()
+            ).applyTo(configurableApplicationContext.getEnvironment());
+        }
+    }
+```
+
+##### TestRestTemplate
+
+В тестах можно использовать ```TestRestTemplate``` - это такой особы ```RestTemplate```, который не следует за редиректами
+и игнорирует куки.
+
+Его можно инстанцировать самостоятельно
+```
+private TestRestTemplate template = new TestRestTemplate();
+```
+
+Либо завайрить, если тестируется реальный web слой
+```
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+public class SampleWebClientTests {
+
+	@Autowired
+	private TestRestTemplate template;
+}
+```
+
+
 ### Почитать
 
 1. Unit тестирование в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/testing.html#unit-testing
@@ -233,6 +271,5 @@ public class Employee {
 3. Тестирование в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html
 4. Тестирование WebFlux в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-webflux-tests
 5. Тестирование при помощи @RestClientTest https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-client
-6. 
 
 ### Задание
