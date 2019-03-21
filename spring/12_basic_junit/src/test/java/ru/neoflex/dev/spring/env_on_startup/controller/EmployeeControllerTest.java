@@ -1,10 +1,12 @@
 package ru.neoflex.dev.spring.env_on_startup.controller;
 
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.rule.OutputCapture;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -14,6 +16,8 @@ import ru.neoflex.dev.spring.env_on_startup.service.EmployeeService;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,6 +31,9 @@ public class EmployeeControllerTest {
 
     @MockBean
     private EmployeeService employeeService;
+
+    @Rule
+    public OutputCapture capture = new OutputCapture();
 
     @Test
     public void test_AsMock_FindAll() throws Exception {
@@ -47,6 +54,8 @@ public class EmployeeControllerTest {
         this.mvc.perform(get("/employee").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string("[{\"id\":1,\"name\":\"test1\",\"age\":1,\"department\":null},{\"id\":2,\"name\":\"test2\",\"age\":2,\"department\":null}]"));
+
+        assertThat(capture.toString(), containsString("TEST-TEST"));
     }
 
     @Test

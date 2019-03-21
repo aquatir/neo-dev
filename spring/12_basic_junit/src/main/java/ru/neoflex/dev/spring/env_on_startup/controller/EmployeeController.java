@@ -26,6 +26,7 @@ public class EmployeeController {
 
     @GetMapping("/employee")
     public List<EmployeeDto> findAll() {
+        System.out.println("TEST-TEST");
         var emps = this.employeeService.findAll();
         var empDtos = emps.stream().map(EmployeeDto::ofEmployee).collect(Collectors.toList());
         return empDtos;

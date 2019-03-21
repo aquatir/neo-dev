@@ -29,6 +29,4 @@ public class EmployeeRepositoryTest {
         var emps = this.employeeRepository.findAll();
         assertEquals(4, emps.size());
     }
-
-
 }

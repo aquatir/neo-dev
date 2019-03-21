@@ -169,18 +169,62 @@ public class EmployeeControllerTest {
 ```@DataJpaTest```.
 
 ```
+@RunWith(SpringRunner.class)
+@DataJpaTest
+@Sql(value = "/add-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = "/remove-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+public class EmployeeRepositoryTest {
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
+    @Test
+    public void test_FindOne() {
+        var maybeEmp = this.employeeRepository.findById(1L);
+        assertTrue(maybeEmp.isPresent());
+    }
+
+    @Test
+    public void test_findAll() {
+        var emps = this.employeeRepository.findAll();
+        assertEquals(4, emps.size());
+    }
+}
 ```
 
 #### Прочие виды тестов
 
 Существует еще целая куча разных аннотаций для различных видов тестирования:
 
-- 
--
--
--
--
+- ```@JdbcTest``` - тестирования, когда необходима только настройка ```Datasource```. Работает с ```JdbcTemplate```.
+- ```@DataJdbcTest``` - как пример выше, только еще конфигурируются Spring Data JDBC репозитории.
+- ```@JooqTest``` - тестирование с ```Datasource``` при использовании JOOQ (он автоконфигурирует ```DSLContext```)
+- ```@DataMongoTest``` - тестирование mongoDB
+- ```@DataNeo4jTest``` - тестирование neo4fj
+- ```@DataRedisTest``` - тестирование redis
+- ```@DataLdapTest``` - тестирование LDAP (Ldap репозитории)
+- ```@RestClientTest``` - позволяет быстро тестировать REST запросы. Использует ```MockRestServiceServer```. См. 
+[пример[5]](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-client)
+
+#### Интересные фишки Junit + Spring boot тестов
+
+##### Можно ловить аутпут тестов!
+
+```
+
+public class Employee {
+
+	@Rule
+	public OutputCapture capture = new OutputCapture();
+
+	@Test
+	public void testName() throws Exception {
+		System.out.println("Hello World!");
+		assertThat(capture.toString(), containsString("World"));
+	}
+
+}
+```
 
 ### Почитать
 
@@ -188,5 +232,7 @@ public class EmployeeControllerTest {
 2. Интеграционное тестирование в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/testing.html#integration-testing
 3. Тестирование в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html
 4. Тестирование WebFlux в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-webflux-tests
+5. Тестирование при помощи @RestClientTest https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-rest-client
+6. 
 
 ### Задание

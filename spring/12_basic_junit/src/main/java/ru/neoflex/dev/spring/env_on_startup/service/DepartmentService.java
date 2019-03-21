@@ -16,6 +16,7 @@ public class DepartmentService {
     }
 
     public List<Department> findAll() {
+        System.out.println("TEST-TEST");
         return this.departmentRepository.findAll();
     }
 
