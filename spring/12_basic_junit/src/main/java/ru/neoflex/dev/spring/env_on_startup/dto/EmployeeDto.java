@@ -2,6 +2,8 @@ package ru.neoflex.dev.spring.env_on_startup.dto;
 
 import ru.neoflex.dev.spring.env_on_startup.entity.Employee;
 
+import java.util.Optional;
+
 public class EmployeeDto {
 
     private Long id;
@@ -17,7 +19,9 @@ public class EmployeeDto {
                 .id(emp.getId())
                 .age(emp.getAge())
                 .name(emp.getName())
-                .department(DepartmentDto.ofDepartment(emp.getDepartment())
+                .department(Optional.ofNullable(emp.getDepartment())
+                        .map(actualDep -> DepartmentDto.ofDepartment(emp.getDepartment()))
+                        .orElse(null)
                 ).build();
     }
 

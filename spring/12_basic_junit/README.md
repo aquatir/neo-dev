@@ -104,18 +104,89 @@ public class EmployeeDtoTest {
 
 #### Web MVC Тесты
 
-Иногда хочется протестировать правильность маппингов на контроллерах. При этом сделать это быстро. Для этих целей в 
-Spring Boot есть ```@WebMvcTest```, которая тестирует только 1 контроллер. При таком тестировании обычно имеет смысл закомать
-все сервисы, с которым взаимодействует данный.
+Иногда хочется протестировать правильность маппингов на контроллерах и возможно их сериализацию в JSON. При этом сделать 
+это хочется быстро, т.к. таких тестов много. Для этих целей в Spring Boot есть ```@WebMvcTest```, которая тестирует 
+только 1 контроллер. При таком тестировании обычно имеет смысл закомать все сервисы, с которым взаимодействует данный.
+
+При таком подходе, бины, например JPA не поднимаются. Все ответы нужно мокать. Ниже есть пример:
 
 
+```
+@RunWith(SpringRunner.class)
+@WebMvcTest(EmployeeController.class)
+public class EmployeeControllerTest {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @MockBean
+    private EmployeeService employeeService;
+
+    @Test
+    public void test_AsMock_FindAll() throws Exception {
+        given(this.employeeService.findAll())
+                .willReturn(List.of(
+                        Employee.builder()
+                                .id(1L)
+                                .name("test1")
+                                .age(1L)
+                                .build(),
+                        Employee.builder()
+                                .id(2L)
+                                .name("test2")
+                                .age(2L)
+                                .build()));
 
 
+        this.mvc.perform(get("/employee").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("[{\"id\":1,\"name\":\"test1\",\"age\":1,\"department\":null},{\"id\":2,\"name\":\"test2\",\"age\":2,\"department\":null}]"));
+    }
+
+    @Test
+    public void test_AsMock_FindOneById() throws Exception {
+        given(this.employeeService.findById(anyLong()))
+                .willReturn(
+                        Optional.of(Employee.builder()
+                                .id(1L)
+                                .name("test1")
+                                .age(1L)
+                                .build())
+                        );
+
+        this.mvc.perform(get("/employee/1").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"id\":1,\"name\":\"test1\",\"age\":1,\"department\":null}"));
+    }
+}
+```
+
+Аналогичным образом можно делать ```WebFlux``` тесты. См [документацию[4]](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-webflux-tests)
+
+#### JPA Тесты
+
+аналогичным образом можно тестировать только JPA слой, не поднимаю web и прочие слои приложения. И тут тоже есть своя аннотация - 
+```@DataJpaTest```.
+
+```
+
+```
+
+#### Прочие виды тестов
+
+Существует еще целая куча разных аннотаций для различных видов тестирования:
+
+- 
+-
+-
+-
+-
 
 ### Почитать
 
 1. Unit тестирование в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/testing.html#unit-testing
 2. Интеграционное тестирование в Spring https://docs.spring.io/spring/docs/current/spring-framework-reference/testing.html#integration-testing
 3. Тестирование в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html
+4. Тестирование WebFlux в Spring Boot https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-testing-autoconfigured-webflux-tests
 
 ### Задание
