@@ -1,5 +1,7 @@
 package ru.neoflex.dev.spring.env_on_startup.dto;
 
+import ru.neoflex.dev.spring.env_on_startup.entity.Employee;
+
 public class EmployeeDto {
 
     private Long id;
@@ -8,6 +10,15 @@ public class EmployeeDto {
     private DepartmentDto department;
 
     public EmployeeDto() {
+    }
+
+    public static EmployeeDto ofEmployee(Employee emp) {
+        return EmployeeDto.builder()
+                .id(emp.getId())
+                .age(emp.getAge())
+                .name(emp.getName())
+                .department(DepartmentDto.ofDepartment(emp.getDepartment())
+                ).build();
     }
 
     public Long getId() {

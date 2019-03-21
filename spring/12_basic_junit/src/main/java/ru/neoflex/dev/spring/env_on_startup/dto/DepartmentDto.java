@@ -1,10 +1,19 @@
 package ru.neoflex.dev.spring.env_on_startup.dto;
 
+import ru.neoflex.dev.spring.env_on_startup.entity.Department;
+
 public class DepartmentDto {
     private Long id;
     private String name;
 
     public DepartmentDto() {};
+
+    public static DepartmentDto ofDepartment(Department department) {
+        return DepartmentDto.builder()
+                .id(department.getId())
+                .name(department.getName())
+                .build();
+    }
 
     public Long getId() {
         return id;
