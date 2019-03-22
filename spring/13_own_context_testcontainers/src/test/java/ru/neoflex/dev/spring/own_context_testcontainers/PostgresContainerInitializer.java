@@ -18,11 +18,6 @@ public class PostgresContainerInitializer implements ApplicationContextInitializ
                     .withStartupTimeout(Duration.ofSeconds(600))
                     .withExposedPorts(5432);
 
-    static {
-        postgres.start();
-    }
-
-
     public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
         TestPropertyValues.of(
                 "spring.datasource.url=" + postgres.getJdbcUrl(),

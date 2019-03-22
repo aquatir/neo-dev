@@ -67,12 +67,7 @@ public class PostgresContainerInitializer implements ApplicationContextInitializ
                     .withUsername("bai")
                     .withPassword("test-password")
                     .withStartupTimeout(Duration.ofSeconds(600))
-                    .withExposedPorts(5432);
-
-    static {
-        postgres.start();
-    }
-    
+                    .withExposedPorts(5432);    
     
     public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
         TestPropertyValues.of(
@@ -86,6 +81,67 @@ public class PostgresContainerInitializer implements ApplicationContextInitializ
 
 Далее надо использовать этот initializer в реальном тесте:
 
+```
+@SpringBootTest
+@ContextConfiguration(initializers = {PostgresContainerInitializer.class})
+@RunWith(SpringRunner.class)
+
+@Sql(value = "/add-test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = "/remove-test-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+public class EmployeeRepositoryTest {
+
+    @ClassRule
+    public static PostgreSQLContainer postgres = PostgresContainerInitializer.postgres;
+
+    @Autowired private EmployeeRepository employeeRepository;
+
+    @Test
+    public void test_findAll() {
+        var emps = this.employeeRepository.findAll();
+        assertEquals(4, emps.size());
+    }
+}
+```
+
+Note: Параметры контейнера можно задавать по-разному. В данном случае 
+
+Это в принципе все. Наш тест будет работать cледующим образом:
+1. Testcontainers поднимет указанный Docker образ ```postgres:10.5```
+2. initializer загонит его параметры в ```spring.datasource.*```
+3. На новую поднятую базу прольются скрипты миграции flyway (Соответственно ошибку в скриптах миграции вы тоже увидите сразу же
+во время теста)
+4. затем прольется SQL скрипт из ```@Sql```.
+5. Запустятся и отработают все тесты
+6. После окончания тестов, Testcontainers сам опустит образ с постгресом.
+
+Можно запускать тесты немного по-другому, а именно все также использовать initializer, но в его коде вставлять статичный блок
+```
+    static {
+        postgres.start();
+    }
+```
+
+Тогда не будет необходимости указывать ```Postgres``` в ```@ClassRule```.
+
+#### Что еще умеет testcontainers
+
+Запускать postgres - это не единственная фича testcontainers. Помимо этого у библиотеки есть поддержка:
+
+- Работа с MySQL, Oracle. Есть сторонние библиотеки для KV хранилищ, типо MongoDB, Cassandra.
+- Работа с В теории, работать можно с любой 
+другой базой, которую можно запихнуть в контейнер, только тогда, возможно, придется по образу и подобию написать несколько
+классов для работы.
+- Работа с Docker-compose файлами. Т.е. можно загрузить совершенно произвольное внешнее окружение
+- UI тестирование с запуском реального браузера. Здесь же поддерживается запись видео.
+- В принципе все что угодно, при имплементации ```GenericContainer```
+
+Пример:
+```
+@ClassRule
+public static GenericContainer redis =
+    new GenericContainer("redis:3.0.2")
+            .withExposedPorts(6379);
+```
 
 ### Почитать
 
