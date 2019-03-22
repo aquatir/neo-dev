@@ -31,6 +31,6 @@
 ### Неделя 4. Тестирование в Spring. Testcontainers.
 
 Задания:
-- ```12_basic_junit/```			-> Как работать с junit в контексте Spring.
+- ```12_basic_junit/```			-> Как работать с junit в контексте Spring Boot. Какие есть виды тестов
 - ```13_own_context_testcontainers/```	-> Как создать свой контекст для теста. Работа с testcontainers
-- ```14_mocks/```			-> Как работают моки/спаи в mockito.
+- ```14_mocks/```			-> Как работают моки/спаи в mockito + Spring boot

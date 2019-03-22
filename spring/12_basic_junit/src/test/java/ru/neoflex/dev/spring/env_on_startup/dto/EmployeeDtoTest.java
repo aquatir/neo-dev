@@ -26,7 +26,7 @@ public class EmployeeDtoTest {
                             .name("testDep")
                             .build()
             )
-            .build();;
+            .build();
 
 
     @Test
