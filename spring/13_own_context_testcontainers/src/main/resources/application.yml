@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    platform:  postgres
+    url: jdbc:postgresql://localhost:5432/dev
+    username: bai
+    password: test-password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate.ddl-auto: validate
+    properties.hibernate.temp.use_jdbc_metadata_defaults: false
+
+  flyway:
+    sql-migration-prefix: V
+    sql-migration-suffixes: .sql
+    sql-migration-separator: __
+    enabled: true
+
