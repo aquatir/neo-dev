@@ -40,8 +40,52 @@ Testcontainers позволяет на время жизни теста (в ра
 у меня нет информации
 2. Добавить зависимость на testcontainers
 ```
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.10.1</version>
+            <scope>test</scope>
+        </dependency>
+```
+
+Все! Теперь нам необходимо лишь сказать testcontainers, чтобы он запускал необходимые образы. Небольшая проблема заключается
+в том, что иногда нужно получить от этих образов информацию, чтобы использовать её в качестве ```Environment``` пропертей 
+для Spring Boot приложения. Но с этой проблемой нам поможет документацию по тестированию, а именно ```@ContextConfiguration```.
+
+Пример: Нам нужно протестировать приложение на реальном postgres. Как бы это сделать?
+
+Первое: создать свой класс - ApplicationContextInitializer. В нем запустить нужный контейнер и скормить нужные проперти 
+файлы в ```Environment```. В примере обратите внимание на использовать ```TestPropertyValue``` хелпера, о котором мы 
+уже говорили в прошлом выпуске.
 
 ```
+public class PostgresContainerInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+    
+    public static PostgreSQLContainer postgres =
+            (PostgreSQLContainer) new PostgreSQLContainer("postgres:10.5")
+                    .withDatabaseName("dev")
+                    .withUsername("bai")
+                    .withPassword("test-password")
+                    .withStartupTimeout(Duration.ofSeconds(600))
+                    .withExposedPorts(5432);
+
+    static {
+        postgres.start();
+    }
+    
+    
+    public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
+        TestPropertyValues.of(
+                "spring.datasource.url=" + postgres.getJdbcUrl(),
+                "spring.datasource.username=" + postgres.getUsername(),
+                "spring.datasource.password=" + postgres.getPassword()
+        ).applyTo(configurableApplicationContext.getEnvironment());
+    }
+}
+```
+
+Далее надо использовать этот initializer в реальном тесте:
+
 
 ### Почитать
 
