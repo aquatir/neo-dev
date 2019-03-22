@@ -1,4 +1,4 @@
-package ru.neoflex.dev.spring.env_on_startup;
+package ru.neoflex.dev.spring.mocks;
 
 
 import org.springframework.boot.SpringApplication;
