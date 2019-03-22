@@ -7,8 +7,9 @@
 ### Теория
 
 Часто хочется протестировать лишь какой-то маленький кусок функционала, а вместо внеших систем подставить Mock объекты. 
-Для этих целей в Spring Boot поумолчанию используется Mockito. Помимо основным возможностей библиотеки, Spring Boot
-предоставляет удобные способы быстро конфигурировать необходимые мок объекты для бинов из контекста.
+Для этих целей в Spring Boot поумолчанию используется [Mockito[1]](https://site.mockito.org/). 
+Помимо основным возможностей библиотеки, Spring Boot предоставляет удобные способы быстро конфигурировать необходимые 
+мок объекты для бинов из контекста.
 
 #### Mockito.mock(), @MockBean и @Mock
 
@@ -210,9 +211,31 @@ public class EmployeeControllerTest {
 создания spy объектов не меняет объекты внутри Spring IoC контейнера. При этом еще следует помнить, что для работы аннотации 
 ```@Spy``` у объекта должен быть конструктор без аргументов, а значит инъекция через констуктор в принципе становится невозможной.
 
+---
+
+#### Что еще посмотреть.
+
+Более подробно про работу с Mockito советую посмотреть в доке [Spring Boot[2]](https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-mocking-beans).
+
+Еще раз о различиях ```Mockiton.mock() / @MockBean / @Mock``` можно почитать [здесь[3]](https://www.baeldung.com/java-spring-mockito-mock-mockbean)
+
+Совсем подробно про Mockito написано в цикле курсов [здесь[4]](https://www.baeldung.com/mockito-series)
+
 ### Почитать
 
-1. Различия между ```Mockito.mock()```, ```@MockBean``` и ```@Mock```
-
+1. Mockito https://site.mockito.org/
+2. Кусок документации Spring Boot про моки https://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-testing.html#boot-features-testing-spring-boot-applications-mocking-beans
+3. Различия между ```Mockito.mock()```, ```@MockBean``` и ```@Mock``` https://www.baeldung.com/java-spring-mockito-mock-mockbean
+4. Цикл курсов по Mockito https://www.baeldung.com/mockito-series
 
 ### Задание
+
+Цель задания: немного разобраться в Mockito.
+
+Необходимо, чтобы мокнутая имплементация ```EmployeeService``` возвращала разные объекты ```Employee``` в зависимости от 
+переданного в метод ```findById(Long id)``` аргумента.
+1. Для пользователя с ID = 1 должен возвращаться пользователь с именем ```TEST-ONE```
+2. Для пользователя с ID = 2 должен возвращаться пользователь с именем ```TEST-TWO``` 
+3. Для любого другого ID должен возвращаться пользователь с именем ```TEST-ANY```
+
+Тесты прилагаются в ```EmployeeControllerTest```. 
