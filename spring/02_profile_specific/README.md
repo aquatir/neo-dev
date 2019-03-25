@@ -108,3 +108,5 @@ public class MyProfileAwareService implements EnvironmentAware
 При этом:
 1. Тест ```MockMyServiceTest``` должен запускаться только с профилем ```mock```
 2. Тест ```MockMyServiceInTestModeTest``` должен запускатся с 2 профилями - ```mock``` и ```test``` 
+
+(Подсказка: тесты можно насильно заставить запускаться в определенном профиле. См аннотацию ```@ActiveProfiles```)
