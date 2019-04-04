@@ -56,7 +56,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 ``` 
 Теперь определение методов обработки будет проходить с учетом нашего условия. 
 Готовый пример того, как можно работать с этой магией приведен 
-[здесь[1]](https://github.com/aquatir/code-samples/tree/master/code-sample-java/code-sample-spring-api-versioning)
+[здесь[1]](https://github.com/aquatir/code-samples/tree/master/code-sample-java/spring-boot/code-sample-spring-api-versioning)
 
 [здесь[2]](https://dzone.com/articles/how-spring-mvc-really-works) также можно изучить вопрос обработки web запроса более подробно.
 
@@ -112,7 +112,7 @@ Spring предоставляет широкие возможности по о�
 
 ### Почитать
 
-1. Как можно определить свой ```RequestCondition``` https://github.com/aquatir/code-samples/tree/master/code-sample-java/code-sample-spring-api-versioning
+1. Как можно определить свой ```RequestCondition``` https://github.com/aquatir/code-samples/tree/master/code-sample-java/spring-boot/code-sample-spring-api-versioning
 2. Про работу Spring и Servlet API (подробно) https://dzone.com/articles/how-spring-mvc-really-works
 3. Про сложности версионирования API https://www.mnot.net/blog/2011/10/25/web_api_versioning_smackdown
 4. Почему версионирование через кастомные хедеры - плохая идея https://www.mnot.net/blog/2012/07/11/header_versioning
